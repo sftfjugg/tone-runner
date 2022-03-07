@@ -1,0 +1,119 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  </head>
+  <style>
+      b{text-indent:0;}
+      table{width:300px;text-indent:2em;font-size:12px;}
+      td{width:50px;}
+      tr{height:12px;}
+  </style>
+  <body text="#000000" bgcolor="#FFFFFF">
+    <div class="moz-text-html" lang="x-unicode">
+      <div class="__aliyun_email_body_block">
+      <br>
+      <div style="clear:both;">
+          <p style="font-size:13.0px;"><h4>Runner status</h4>
+              <br>{{runner_status}}
+          </p>
+          <p style="font-size:13.0px;"><h4>Redis status</h4>
+              <br>used_memory_human： {{used_memory_human}}
+              <br>used_memory_rss_human： {{used_memory_rss_human}}
+              <br>used_memory_peak_human：{{used_memory_peak_human}}
+              <br>maxmemory_human：{{maxmemory_human}}
+              <br>maxmemory_policy：{{maxmemory_policy}}
+          </p>
+          <p style="font-size:13.0px;"><h4>Queue info</h4>
+              <br>pending_job： {{pending_job}}
+              <br>running_job： {{running_job}}
+              <br>fast_pending_dag： {{fast_pending_dag}}
+              <br>fast_running_dag： {{fast_running_dag}}
+              <br>slow_pending_dag：{{slow_pending_dag}}
+              <br>slow_running_dag：{{slow_running_dag}}
+              <br>pending_dag_node：{{pending_dag_node}}
+              <br>running_dag_node：{{running_dag_node}}
+              <br>pending_plan：{{pending_plan}}
+              <br>running_plan：{{running_plan}}
+          </p>
+          <p style="font-size:13.0px;"><h4>Set info</h4>
+              <br>master_fingerprint： {{master_fingerprint}}
+              <br>scheduler_master： {{scheduler_master}}
+              <br>scheduler_slave： {{scheduler_slave}}
+          </p>
+          <p style="font-size:13.0px;"><h4>ZSet info</h4>
+              <br>ws_use_freq：
+              {% for data in ws_use_freq %}
+              <br>{{data.ws_id}}： {{data.data}}
+              {% endfor %}
+              <br>server_use_freq： {{server_use_freq}}
+          </p>
+          <p style="font-size:13.0px;"><h4>Hash info</h4>
+              <br>job_release_server： {{job_release_server}}
+              <br>using_server： {{using_server}}
+              <br>plan_server_lock： {{plan_server_lock}}
+              <br>plan_inst_ctx： {{plan_inst_ctx}}
+              <br>h_ip2sn： {{h_ip2sn}}
+              <br>h_sn2ip： {{h_sn2ip}}
+          </p>
+          <hr>
+          {% if job_data %}
+          <p style="font-size:13.0px;"><h4>Job info</h4>
+              <br>job_id： <b>{{job_id}}</b>
+              <br>ws_id： {{ws_id}}
+              <br>state： {{state}}
+              <br>state_desc： {{state_desc}}
+          </p>
+          <p style="font-size:13.0px;"><h4>Suite case info</h4>
+              {% for suite in suite_list%}
+              <br>suite_id： <b>{{suite.suite_id}}</b>
+              <br>suite_state： {{suite.suite_state}}
+              <br>case_list： {{suite.case_list}}
+                  {% for case in suite.case_list %}
+                  <br>case_id： <b>{{case.case_id}}</b>
+                  <br>server_provider： {{case.server_provider}}
+                  <br>server_object_id： {{case.server_object_id}}
+                  <br>server_tag_id： {{case.server_tag_id}}
+                  <br>server_snapshot_id： {{case.server_snapshot_id}}
+                  <br>state： {{case.state}}
+                  <br>
+                  {% endfor%}
+              <br>
+              {% endfor%}
+              <br>
+              <br>
+          </p>
+          <p style="font-size:13.0px;"><h4>Server info</h4>
+              {% for machine in machine_data%}
+              <br>server_id： <b>{{machine.server_id}}</b>
+              <br>ip： <b>{{machine.ip}}</b>
+              <br>state： {{machine.state}}
+              <br>occupied_job_id： <b>{{machine.occupied_job_id}}</b>
+              <br>
+              {% endfor%}
+              <br>
+              <br>
+          </p>
+          <p style="font-size:13.0px;"><h4>Dag info</h4>
+              <br><label>dag_id： </label><b>{{dag_id}}</b>
+              <br>is_update： {{is_update}}
+              <br>block： {{block}}
+              <br>graph： {{graph}}
+              <br>kwargs： {{kwargs}}
+              <br>
+              {% for step in dag_step_info%}
+                  <br>dag_step_id： <b>{{step.id}}</b>
+                  <br>stage： {{step.stage}}
+                  <br>remark： {{step.remark}}
+                  <br>state： {{step.state}}
+                  <br>step_data： {{step.step_data}}
+                  <br>test_step_info： {{step.test_step_info}}
+                  <br>
+              {% endfor %}
+              <br>
+          </p>
+          {% endif %}
+      </div>
+     </div>
+    </div>
+  </body>
+</html>
