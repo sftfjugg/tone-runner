@@ -409,14 +409,14 @@ def deploy_agent_by_ecs_assistant(
     # 1.请求agent proxy api添加机器、获取tsn
     if os_type == 'debian':
         if arch == 'x86_64':
-            version = cp.get('toneagent_version_debian_x86', 'debian_x86_64_1.0.2')
+            version = cp.get('toneagent_version_debian_x86', 'debian-x86_64-1.0.2')
         else:
-            version = cp.get('toneagent_version_debian_arm', 'debian_x86_64_1.0.2')
+            version = cp.get('toneagent_version_debian_arm', 'debian-aarch64-1.0.2')
     else:
         if arch == 'x86_64':
-            version = cp.get('toneagent_version_linux_x86', 'linux_x86_64_1.0.1')
+            version = cp.get('toneagent_version_linux_x86', 'linux-x86_64-1.0.2')
         else:
-            version = cp.get('toneagent_version_linux_arm', 'linux_aarch64_1.0.1')
+            version = cp.get('toneagent_version_linux_arm', 'linux-aarch64-1.0.2')
 
     logger.info(f"add agent api params:{instance_id}|{ip}|{public_ip}|{cloud_driver}|{mode}|{arch}|{os_type}")
     add_agent_result = ToneAgentClient("add").add_agent(
