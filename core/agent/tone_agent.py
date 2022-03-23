@@ -31,7 +31,6 @@ class ToneAgentRequest(object):
             # 一定时间内有效
             "timestamp": time.time(),
         }
-        logger.info(f"access_key: {self._access_key}, secret_key: {self._secret_key}")
 
     @property
     def _data(self):
@@ -221,7 +220,10 @@ class ToneAgentClient:
 
     def do_exec(self, ip=None, command=None, args="", script_type="shell",
                 env=None, cwd=None, sync="false", timeout=60, sn=None):
-        self.exec_request.set_ip(ip)
+        if ip:
+            self.exec_request.set_ip(ip)
+        else:
+            self.exec_request.set_ip(sn)
         if env:
             if isinstance(env, dict):
                 tmp_env_list = []

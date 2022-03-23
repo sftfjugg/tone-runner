@@ -107,6 +107,7 @@ class ProcessDagNodePlugin:
         logger.info(f"Update server info to snapshot, job_case_id:{dag_step.job_case_id}")
         snapshot_update_fields = {}
         server_ip = dag_step.server_ip
+        server_sn = dag_step.server_sn
         channel_type = dag_step.channel_type
         server_provider = dag_step.server_provider
         snapshot_server_id = dag_step.snapshot_server_id
@@ -119,6 +120,7 @@ class ProcessDagNodePlugin:
             success, result = ExecChannel.do_exec(
                 channel_type,
                 ip=server_ip,
+                sn=server_sn,
                 command=command,
                 sync=True
             )

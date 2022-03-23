@@ -51,6 +51,7 @@ class StepCommon:
         kernel_info = meta_data.get(JobCfgFields.KERNEL_INFO, dict())
         hot_fix = kernel_info.get(JobCfgFields.HOT_FIX, False)
         ip = meta_data.get(ServerFlowFields.SERVER_IP)
+        sn = meta_data.get(ServerFlowFields.SERVER_SN)
         env_info = meta_data.get(JobCfgFields.ENV_INFO, dict())
         if run_case_step:
             job_case_id = meta_data[ServerFlowFields.JOB_CASE_ID]
@@ -72,6 +73,7 @@ class StepCommon:
         success, result = ExecChannel.do_exec(
             channel_type,
             ip=ip,
+            sn=sn,
             command=script,
             args=args,
             timeout=timeout,
@@ -85,6 +87,7 @@ class StepCommon:
         job_id = meta_data[ServerFlowFields.JOB_ID]
         channel_type = meta_data[ServerFlowFields.CHANNEL_TYPE]
         ip = meta_data[ServerFlowFields.SERVER_IP]
+        sn = meta_data.get(ServerFlowFields.SERVER_SN)
         script = meta_data[JobCfgFields.SCRIPT]
         env_info = meta_data.get(JobCfgFields.ENV_INFO, dict())
         if channel_type == ChannelType.STAR_AGENT:
@@ -97,6 +100,7 @@ class StepCommon:
         success, result = ExecChannel.do_exec(
             channel_type,
             ip=ip,
+            sn=sn,
             command=script,
             env=env_info,
             sync=sync,
