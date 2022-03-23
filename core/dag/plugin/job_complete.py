@@ -392,8 +392,10 @@ class JobComplete:
         else:
             # 释放机器前执行清理脚本(如果有的话)
             if meta_data:
+                if not in_pool:
+                    server_object_id = meta_data['server_snapshot_id']
                 JobComplete.clean_script(
-                    job_id, server_object_id, run_mode, server_provider, meta_data
+                    job_id, server_object_id, run_mode, server_provider, meta_data, in_pool
                 )
             # 释放机器
             release_msg = f"Now release server, server_object_id:{server_object_id}, in_pool:{in_pool}"
@@ -413,7 +415,7 @@ class JobComplete:
             )
 
     @staticmethod
-    def clean_script(job_id, server_object_id, run_mode, server_provider, meta_data):
+    def clean_script(job_id, server_object_id, run_mode, server_provider, meta_data, in_pool):
         test_job = TestJob.filter(
             TestJob.id == job_id,
             TestJob.is_deleted.in_([DbField.TRUE, DbField.FALSE])
@@ -430,7 +432,10 @@ class JobComplete:
             if run_mode == RunMode.CLUSTER:
                 servers = Cs.get_servers_by_cluster(server_object_id, server_provider)
             else:
-                servers = [Cs.get_server_by_provider(server_object_id, server_provider)]
+                if in_pool:
+                    servers = [Cs.get_server_by_provider(server_object_id, server_provider)]
+                else:
+                    servers = [Cs.get_snapshot_server_by_provider(server_object_id, server_provider)]
             for server in servers:
                 if test_job.server_provider == ServerProvider.ALI_GROUP:
                     server_ip = server.ip
