@@ -172,9 +172,13 @@ class JobComplete:
                 server_snapshot_id = se.server_snapshot_id
                 server_object_id = se.server_object_id
                 if server_snapshot_id:
-                    server_sn = TestServerSnapshot.get_by_id(server_snapshot_id).server_sn
+                    server_snapshot = TestServerSnapshot.filter(id=server_snapshot_id).first()
+                    if server_snapshot:
+                        server_sn = server_snapshot.server_sn
                 elif server_object_id:
-                    server_sn = TestServer.get_by_id(server_snapshot_id).server_sn
+                    server = TestServer.filter(id=server_snapshot_id).first()
+                    if server:
+                        server_sn = server.server_sn
                 if server_sn:
                     is_using, using_id = RemoteAllocServerSource.check_server_in_using_by_cache(server_sn)
                     if is_using and str(using_id) == str(self.job_id):
