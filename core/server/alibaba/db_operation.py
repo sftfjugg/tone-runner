@@ -702,8 +702,9 @@ class AliCloudDbServerOperation(CommonDbServerOperation):
 
     @classmethod
     def release_server(cls, job_id, cloud_server, source_server_deleted=False, cluster_server=False):
-        server_sn = cloud_server.server_sn
-        if not source_server_deleted:
+        server_sn = None
+        if cloud_server and not source_server_deleted:
+            server_sn = cloud_server.server_sn
             if cluster_server or cloud_server.spec_use == SpecUseType.USE_BY_CLUSTER:
                 spec_use = SpecUseType.USE_BY_CLUSTER
             else:
