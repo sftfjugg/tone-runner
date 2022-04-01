@@ -471,13 +471,29 @@ def check_reboot(ip=None, sn=None, reboot_time=None,  max_retries=5, interval=3)
     return check_res
 
 
-def check_server_os_type(ip, sn=None):
-    result = ToneAgentClient().do_exec(ip=ip, command="lsb_release -d", sync="true", timeout=10, sn=sn)
-    os_type = "linux"
+def check_server_os_type(ip, sn=None, retry_times=3):
+    for _ in range(retry_times):
+        res = _check_server_os_type(ip, sn)
+        if res:
+            return res
+        time.sleep(3)
+    return "linux"
+
+
+def _check_server_os_type(ip, sn=None):
+    result = ToneAgentClient().do_exec(
+        ip=ip,
+        command="lsb_release -d",
+        sync="true",
+        timeout=10,
+        sn=sn
+    )
     logger.info(f"{ip} check server os type {result}, channel_type:tone-agent")
-    if result["SUCCESS"]:
-        if result["RESULT"]["TASK_STATUS"] == "success":
-            os_type_str = result["RESULT"]["TASK_RESULT"].lower()
-            if "ubuntu" in os_type_str or "debian" in os_type_str:
-                os_type = "debian"
-    return os_type
+    if not result["SUCCESS"]:
+        return
+    if result["RESULT"]["TASK_STATUS"] == "success":
+        os_type_str = result["RESULT"]["TASK_RESULT"].lower()
+        if "ubuntu" in os_type_str or "debian" in os_type_str:
+            return "debian"
+        else:
+            return "linux"
