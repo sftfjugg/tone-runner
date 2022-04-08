@@ -422,7 +422,7 @@ class AliGroupDbServerOperation(CommonDbServerOperation):
         with DistributedLock(
                 'alloc_custom_server',
                 10,
-                10,
+                15,
                 purpose='alloc_custom_server'
         ) as Lock:
             _lock = Lock.lock
