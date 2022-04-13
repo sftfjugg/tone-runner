@@ -229,7 +229,7 @@ class StepCommon:
     @classmethod
     def __covert2dict(cls, ln):
         if ln:
-            k, v = ln.split("=")
+            k, v = ln.split("=", 1)
             if k.startswith("export"):
                 k = k.replace("export", "", 1)
             k = k.strip()
