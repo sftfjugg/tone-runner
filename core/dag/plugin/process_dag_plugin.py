@@ -193,7 +193,7 @@ class ProcessDagPlugin:
             is_end = True
             if no_test_end_node:
                 is_fail = True
-                JobComplete.set_job_case_state_when_no_test_fail(_end_node.job_case_id)
+                JobComplete.set_job_case_state_fail_by_node(_end_node)
             if test_end_node and test_end_node.state == ExecState.FAIL:
                 is_fail = True
             JobComplete.set_job_suite_state_in_real_time(_end_node.job_suite_id)

@@ -196,6 +196,20 @@ class JobComplete:
             run_strategy = RunStrategy.RAND
         return run_strategy
 
+    @classmethod
+    def set_job_case_state_fail_by_node(cls, dag_node):
+        """当非测试阶段步骤(测试准备步骤如reboot、prepare等)失败时，
+        将当前机器相关的case全部置为失败"""
+        dag_steps = DagStepInstance.filter(dag_id=dag_node.dag_id, stage=StepStage.RUN_CASE)
+        for dag_step in dag_steps:
+            if dag_step.server_id == dag_node.server_id:
+                logger.info(f"server's({dag_step.server_ip}) step before run_case failed, "
+                            f"now set job case{dag_step.job_case_id} state to fail")
+                if dag_step.id != dag_node.id:
+                    dag_step.state = ExecState.SKIP
+                    dag_step.save()
+                cls.set_job_case_state_when_no_test_fail(dag_step.job_case_id)
+
     @staticmethod
     def set_job_case_state_when_no_test_fail(job_case_id):
         logger.info(
