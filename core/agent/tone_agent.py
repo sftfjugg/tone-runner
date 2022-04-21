@@ -359,8 +359,7 @@ def do_stop(**kwargs):
         try:
             result = ToneAgentClient("stop").do_stop(**kwargs)
             success = result["SUCCESS"]
-            tid = result["TID"]
-            if success and tid:
+            if success and 'TID' in result:
                 return success, result
             else:
                 error_msg = result["ERROR_MSG"]
