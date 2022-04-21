@@ -327,7 +327,22 @@ class JobComplete:
             test_step.state = state
             test_step.save()
         self.set_job_suite_or_case_state_by_test_step(test_step, dag_step.stage, state)
-        self.release_server_with_dag_node(self.job_id, dag_step)
+        try:
+            # 如果当前job、当前机器下没有pending或者running状态的case，则释放该机器
+            if not TestJobCase.filter(
+                    TestJobCase.job_id == dag_step.job_id,
+                    TestJobCase.server_snapshot_id == dag_step.snapshot_server_id,
+                    TestJobCase.state.in_(ExecState.no_end_set)
+            ).exists():
+                logger.info(f"dag({dag_step.id}) exec {state}. "
+                            f"and current server(id:{dag_step.snapshot_server_id}) no pending case"
+                            f"now release the server(ip:{dag_step.server_ip})")
+                self.release_server_with_dag_node(self.job_id, dag_step)
+            else:
+                logger.info(f"dag({dag_step.id}) exec {state}. "
+                            f"current server(id:{dag_step.snapshot_server_id}) has pending case")
+        except Exception as error:
+            logger.error(f"set_one_dag_node_state: release server failed!{str(error)}")
         logger.info(
             f"set one dag_node state when job stop or delete or process dag_node fail, "
             f"job_id: {self.job_id}, node_id: {node_id}, state: {state}"
@@ -378,9 +393,12 @@ class JobComplete:
                            run_strategy, server_sn=None, in_pool=True, dag_node_id=None, meta_data=None):
         check_release_msg = (f"Now check server needs to be released, "
                              f"server_object_id:{server_object_id}, in_pool:{in_pool}")
+
         if dag_node_id:
             check_release_msg += f", dag_node_id:{dag_node_id}"
         logger.info(check_release_msg)
+        if not in_pool:
+            server_object_id = meta_data['server_snapshot_id']
         # 检查job中该机器是否已经释放了
         if RemoteReleaseServerSource.check_job_release_server(
                 job_id, f"{server_provider}_{run_mode}_{job_suite_id}_{server_object_id}_{run_strategy}"
@@ -396,8 +414,6 @@ class JobComplete:
         else:
             # 释放机器前执行清理脚本(如果有的话)
             if meta_data:
-                if not in_pool:
-                    server_object_id = meta_data['server_snapshot_id']
                 JobComplete.clean_script(
                     job_id, server_object_id, run_mode, server_provider, meta_data, in_pool
                 )
