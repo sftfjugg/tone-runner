@@ -117,31 +117,46 @@ class ProcessDagNodePlugin:
         type_command_list = list(cls.EXEC_CMD_WITH_CASE_DONE.items())
         retry_times = 0
         for key, command in type_command_list:
-            success, result = ExecChannel.do_exec(
-                channel_type,
-                ip=server_ip,
-                sn=server_sn,
-                command=command,
-                sync=True
-            )
-            if success:
-                result = result[agent_res.JOB_RESULT].strip()
-                if key == "distro":
-                    os_name = cls._get_dist_field(result, 0)
-                    version = cls._get_dist_field(result, 1)
-                    result = os_name + version
-                    if not result and retry_times < 2:
-                        type_command_list.append(("distro", "cat /etc/os-release | grep -i id="))
-                        retry_times += 1
-                if key == 'product_version' and not result:
-                    result = default_product_version
-                snapshot_update_fields[key] = result
-            else:
-                logger.error(f"Exec command fail, command:{command}")
-                if key == 'product_version':
-                    snapshot_update_fields['product_version'] = default_product_version
-
+            try:
+                cls._exec_server_info_cmd(
+                    channel_type, server_ip, server_sn, command, agent_res,
+                    type_command_list, retry_times, key, default_product_version,
+                    snapshot_update_fields
+                )
+            except Exception as error:
+                logger.error(
+                    f"Update server info to snapshot error! "
+                    f"job_case_id:{dag_step.job_case_id}, error: {error}")
         Cs.update_snapshot_server(
             Cs.get_snapshot_server_by_provider(snapshot_server_id, server_provider),
             **snapshot_update_fields
         )
+
+    @classmethod
+    def _exec_server_info_cmd(cls, channel_type, server_ip, server_sn, command, agent_res,
+                              type_command_list, retry_times, key, default_product_version,
+                              snapshot_update_fields):
+        success, result = ExecChannel.do_exec(
+            channel_type,
+            ip=server_ip,
+            sn=server_sn,
+            command=command,
+            sync=True
+        )
+        if success:
+            result = result[agent_res.JOB_RESULT].strip()
+            if key == "distro":
+                os_name = cls._get_dist_field(result, 0)
+                version = cls._get_dist_field(result, 1)
+                result = os_name + version
+                if not result and retry_times < 2:
+                    type_command_list.append(("distro", "cat /etc/os-release | grep -i id="))
+                    retry_times += 1
+            if key == 'product_version' and not result:
+                result = default_product_version
+            snapshot_update_fields[key] = result
+        else:
+            logger.error(f"Exec command fail, command:{command}")
+            if key == 'product_version':
+                snapshot_update_fields['product_version'] = default_product_version
+        return snapshot_update_fields
