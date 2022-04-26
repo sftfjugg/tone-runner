@@ -33,13 +33,14 @@ from constant import (
     MonitorParam,
     QueueName,
     ServerAttribute,
-    ServerFlowFields, RunStrategy, ServerProvider
+    ServerFlowFields, RunStrategy, ServerProvider, ServerState, ProcessDataSource
 )
 from models.base import db
 from models.job import TestJob, TestJobSuite, TestJobCase, TestStep
 from models.dag import Dag, DagStepInstance
 from tools import utils
 from tools.log_util import LoggerFactory
+from tools.redis_cache import redis_cache
 
 alloc_server_module = importlib.import_module(config.ALLOC_SERVER_MODULE)
 logger = LoggerFactory.job_complete()
@@ -60,6 +61,7 @@ class JobComplete:
         self.end_state = self._get_end_state(state)
         self.err_msg = err_msg
         self.complete_flag = "job process is completed."
+        self.SOURCE_STORE = redis_cache
 
     def _get_end_state(self, state):
         end_state, state_from = None, "job self"
@@ -519,6 +521,17 @@ class JobComplete:
         )
         RemoteReleaseServerSource.delete_job_release_server(self.job_id)
 
+    def clean_job_occupied_server(self):
+        if self.job.server_provider == 'aligroup':
+            TestServer.update(state=ServerState.AVAILABLE, occupied_job_id=None).where(
+                TestServer.state == ServerState.OCCUPIED,
+                TestServer.occupied_job_id == self.job_id
+            ).execute()
+            using_server = self.SOURCE_STORE.hgetall(ProcessDataSource.USING_SERVER)
+            for key in using_server:
+                if using_server[key] == self.job_id:
+                    self.SOURCE_STORE.hdel(ProcessDataSource.USING_SERVER, key)
+
     def update_job_info(self):
         if self.job.product_version:
             return
@@ -579,6 +592,7 @@ class JobComplete:
                 self.save_report()
                 self.remove_monitor()
                 self.clean_job_cache()
+                self.clean_job_occupied_server()
             is_complete = True
         except Exception as error:
             logger.exception(error)
