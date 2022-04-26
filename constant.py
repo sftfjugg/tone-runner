@@ -338,6 +338,7 @@ class ProcessDataSource(metaclass=BaseSourceData):
 
 class OtherCache:
     plugin_version_name = "last_plugin_version"
+    is_send_msg = "is_send_msg"
 
 
 class StarAgentResStatus:

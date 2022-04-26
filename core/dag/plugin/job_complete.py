@@ -5,6 +5,7 @@ from functools import reduce
 
 import config
 import re
+import datetime
 from core.exception import (
     JobEndException,
     DagNodeEndException,
@@ -40,6 +41,8 @@ from models.job import TestJob, TestJobSuite, TestJobCase, TestStep
 from models.dag import Dag, DagStepInstance
 from tools import utils
 from tools.log_util import LoggerFactory
+from tools.redis_cache import redis_cache
+from constant import OtherCache
 
 alloc_server_module = importlib.import_module(config.ALLOC_SERVER_MODULE)
 logger = LoggerFactory.job_complete()
@@ -60,6 +63,7 @@ class JobComplete:
         self.end_state = self._get_end_state(state)
         self.err_msg = err_msg
         self.complete_flag = "job process is completed."
+        self.SOURCE_STORE = redis_cache
 
     def _get_end_state(self, state):
         end_state, state_from = None, "job self"
@@ -506,7 +510,19 @@ class JobComplete:
             summary_logger.error(f"Stop job step has error: {error},\nstep_id:{step_id},stage:{stage}")
 
     def notice(self):
-        Oam.send_msg_with_job_complete(self.job_id, self.end_state)
+        try:
+            send_key = str(self.job_id) + '_' + self.end_state
+            if not self.SOURCE_STORE.hexists(OtherCache.is_send_msg, send_key) and self.job.end_time:
+                Oam.send_msg_with_job_complete(self.job_id, self.end_state)
+                self.SOURCE_STORE.hset(OtherCache.is_send_msg, send_key, self.job.end_time.strftime('%Y-%m-%d'))
+                if self.SOURCE_STORE.hlen(OtherCache.is_send_msg) > 50:
+                    for tmp_job_key in self.SOURCE_STORE.hkeys(OtherCache.is_send_msg):
+                        end_span = datetime.datetime.now() - datetime.datetime.strptime(
+                            self.SOURCE_STORE.hget(OtherCache.is_send_msg, tmp_job_key), '%Y-%m-%d')
+                        if end_span.days > 3:
+                            self.SOURCE_STORE.hdel(OtherCache.is_send_msg, tmp_job_key)
+        except Exception as error:
+            logger.error(f"produce notice error: {error}, \njob_id:{self.job_id}")
 
     def save_report(self):
         if self.end_state == ExecState.SUCCESS and self.job.report_template_id and not self.job.report_is_saved:
