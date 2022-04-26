@@ -8,7 +8,7 @@ from core.op_acc_msg import OperationAccompanyMsg as Oam
 from constant import ServerFlowFields, ServerProvider, ExecState
 from models.base import db
 from models.job import TestStep
-from models.server import get_server_model_by_provider
+from models.server import get_server_model_by_provider, TestServer
 from tools.log_util import LoggerFactory
 from .aligroup import AliGroupStep
 from .alicloud import AliCloudStep
@@ -45,11 +45,19 @@ def check_server_before_exec_step(func):
         if server_provider == ServerProvider.ALI_CLOUD and not is_instance:
             return func(*args, **kwargs)
         if in_pool:
-            server = server_model.get_by_id(server_id)
-            check_res, error_msg = ExecChannel.check_server_status(channel_type, server_ip, sn=server_sn)
-            if not check_res:
-                Oam.set_server_broken_and_send_msg(job_id, server, error_msg=error_msg,
-                                                   run_mode=run_mode, cluster_id=cluster_id)
+            server = server_model.filter(id=server_id).first()
+            check_res = None
+            if server:
+                check_res, error_msg = ExecChannel.check_server_status(channel_type, server_ip, sn=server_sn)
+                if not check_res:
+                    Oam.set_server_broken_and_send_msg(job_id, server, error_msg=error_msg,
+                                                       run_mode=run_mode, cluster_id=cluster_id)
+                else:
+                    TestServer.update(state='Occupied', spec_use=2, occupied_job_id=job_id).where(
+                        TestServer.id == server_id,
+                        TestServer.state == 'Available'
+                    ).execute()
+                    logger.info(f"reset server state, job_id:{job_id}, server_id:{server_id}")
         else:
             check_res, error_msg = ExecChannel.check_server_status(channel_type, server_ip, sn=server_sn)
             snapshot_server = Cs.get_snapshot_server_by_provider(snapshot_server_id, server_provider)
