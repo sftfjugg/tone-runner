@@ -598,7 +598,7 @@ class QueryDataServer:
             redis_data.update({queue_name: self.query_redis(queue_name, que_type='sort_set')})
         # hash
         for queue_name in ['job_release_server', 'using_server', 'plan_server_lock',
-                           'plan_inst_ctx', 'h_ip2sn', 'h_sn2ip']:
+                           'plan_inst_ctx', 'h_ip2sn', 'h_sn2ip', 'is_send_msg']:
             redis_data.update({queue_name: self.query_redis(queue_name, que_type='hash')})
         return redis_data
 
@@ -607,7 +607,7 @@ class QueryDataServer:
         database = RedisCache(config.REDIS_CACHE_DB)
         if not name:
             return "name is not empty!"
-        if add_name and name not in ['last_plugin_version', 'h_ip2sn', 'h_sn2ip']:
+        if add_name and name not in ['last_plugin_version', 'h_ip2sn', 'h_sn2ip', 'is_send_msg']:
             name = 'tone-runner-{}'.format(name)
         if name == "all_keys":
             return database.keys("*")
