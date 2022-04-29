@@ -197,7 +197,8 @@ class AliGroupDbServerOperation(CommonDbServerOperation):
         server_id_len = len(server_id_list)
         with db.atomic() as transaction:
             update_num = TestServer.update(
-                state=ServerState.OCCUPIED
+                state=ServerState.OCCUPIED,
+                occupied_job_id=job_id
             ).where(
                 TestServer.id.in_(server_id_list),
             ).execute()
