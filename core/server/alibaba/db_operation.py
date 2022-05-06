@@ -20,7 +20,7 @@ from models.server import (
     CloudServer,
     TestCluster,
     TestClusterServer,
-    ServerTagRelation,
+    ServerTagRelation, CloudServerSnapshot,
 )
 from tools.log_util import LoggerFactory
 from .base_db_op import CommonDbServerOperation
@@ -451,8 +451,11 @@ class AliGroupDbServerOperation(CommonDbServerOperation):
 class AliCloudDbServerOperation(CommonDbServerOperation):
 
     @classmethod
-    def get_cloud_server(cls, job_id, server_id):
-        cloud_server = CloudServer.get_by_id(server_id)
+    def get_cloud_server(cls, job_id, server_id, snapshot_server_id=None):
+        if snapshot_server_id:
+            cloud_server = CloudServerSnapshot.get_by_id(snapshot_server_id)
+        else:
+            cloud_server = CloudServer.get_by_id(server_id)
         if not cloud_server.is_instance:
             cloud_server = CloudServer.get_or_none(parent_server_id=server_id, job_id=job_id)
         return cloud_server
@@ -746,4 +749,5 @@ class AliCloudDbServerOperation(CommonDbServerOperation):
                 ServerFlowFields.SERVER_STATE: ServerState.BROKEN,
             }
         else:
+            RemoteAllocServerSource.add_server_to_using_cache(snapshot_server.server_sn, job_id)
             return snapshot_server, None

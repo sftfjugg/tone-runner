@@ -2,6 +2,7 @@ import json
 from lib import peewee
 from .base import BaseModel
 from constant import ExecState, ServerFlowFields, JobCfgFields
+from .server import CloudServerSnapshot, CloudServer
 
 
 class Dag(BaseModel):
@@ -185,14 +186,22 @@ class DagStepInstance(BaseModel):
     @classmethod
     def update_cloud_server_info(cls, dag_id, cloud_server):
         dag_steps = DagStepInstance.filter(dag_id=dag_id)
+        if isinstance(cloud_server, CloudServerSnapshot):
+            cloud_server_obj = CloudServer.get_or_none(id=cloud_server.source_server_id)
+            if not cloud_server_obj:
+                cloud_server_obj = CloudServerSnapshot.get_by_id(cloud_server.id)
+        else:
+            cloud_server_obj = cloud_server
         for dag_step in dag_steps:
             step_data = json.loads(dag_step.step_data)
-            if step_data.get('server_id') == cloud_server.parent_server_id:
+            if step_data.get('server_id') == cloud_server.parent_server_id or \
+                    step_data.get('server_snapshot_id') == cloud_server.parent_server_id:
                 step_data.update({
                     ServerFlowFields.OLD_SERVER_ID: dag_step.server_id,
-                    ServerFlowFields.SERVER_ID: cloud_server.id,
-                    ServerFlowFields.SERVER_IP: cloud_server.server_ip,
-                    ServerFlowFields.SERVER_SN: cloud_server.server_sn
+                    ServerFlowFields.SERVER_ID: cloud_server_obj.id,
+                    ServerFlowFields.SERVER_IP: cloud_server_obj.server_ip,
+                    ServerFlowFields.SERVER_SN: cloud_server_obj.server_sn,
+                    ServerFlowFields.IN_POOL: cloud_server_obj.in_pool
                 })
                 dag_step.step_data = json.dumps(step_data)
                 dag_step.save()

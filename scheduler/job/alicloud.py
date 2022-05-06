@@ -49,11 +49,14 @@ class AliCloudStep(AliGroupStep):
         cloud_server.hostname = node["EniInstanceId"]  # useless field
 
     @classmethod
-    def _create_cloud_instance(cls, driver, provider_info, job_id, server_id):
+    def _create_cloud_instance(cls, driver, provider_info, job_id, server_id, snapshot_server_id=None):
         try:
             provider_info_dict = provider_info.to_dict()
             logger.info(f"Create cloud instance, provider_info:{provider_info_dict}")
-            template_cloud_server = CloudServer.get_by_id(server_id)
+            if server_id:
+                template_cloud_server = CloudServer.get_by_id(server_id)
+            else:
+                template_cloud_server = CloudServerSnapshot.get_by_id(snapshot_server_id)
             new_cloud_server_data = template_cloud_server.__data__.copy()
             job_obj = TestJob.get_by_id(job_id)
             user = User.get_or_none(id=job_obj.creator)
@@ -70,7 +73,7 @@ class AliCloudStep(AliGroupStep):
             new_cloud_server_data.update({
                 "job_id": job_id,
                 "occupied_job_id": job_id,
-                "parent_server_id": server_id,
+                "parent_server_id": server_id or snapshot_server_id,
                 "instance_id": instance_id,
                 "is_instance": True,
                 "state": ServerState.OCCUPIED,
@@ -135,7 +138,7 @@ class AliCloudStep(AliGroupStep):
         try:
             if not instance_id:
                 cloud_server = cls._create_cloud_instance(
-                    cloud_driver, provider_info, job_id, server_id
+                    cloud_driver, provider_info, job_id, server_id, snapshot_server_id
                 )
                 snapshot_cloud_server = CloudServerSnapshot.get_by_id(snapshot_server_id)
                 update_snapshot_fields = cloud_server.__data__.copy()

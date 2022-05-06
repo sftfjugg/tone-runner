@@ -41,6 +41,8 @@ class PoolCommonOperation:
         _meta_data["login_password"] = config.ECS_LOGIN_PASSWORD
         for alias, meta_field in cls.CLOUD_INST_REQUIRE_FIELDS.items():
             _meta_data[alias] = meta_data[meta_field]
+            if alias == 'name' and not _meta_data[alias]:
+                _meta_data[alias] = meta_data['template_name']
         return _meta_data
 
     @classmethod
@@ -101,6 +103,8 @@ class PoolCommonOperation:
             default_info[ServerFlowFields.CHANNEL_TYPE] = channel_type
             default_info[ServerFlowFields.IN_POOL] = False
             default_info[ServerFlowFields.READY] = ServerReady.READY
+            cloud_inst_meta = cls.get_cloud_instance_meta_data(snapshot_server)
+            default_info[ServerFlowFields.CLOUD_INST_META] = cloud_inst_meta
             Cs.update_snapshot_server(snapshot_server, job_id=job_id)
         else:
             if server_info:

@@ -15,7 +15,7 @@ from .spec_server import (
     AliGroupSpecUseNoInPoolByJob,
     AliCloudSpecUseByJob,
     AliGroupSpecUseByCluster,
-    AliCloudSpecUseByCluster,
+    AliCloudSpecUseByCluster, AliCloudSpecUseNoInPoolByJob,
 )
 from .tag_pool import (
     AliGroupTagStdPool,
@@ -133,7 +133,10 @@ class AllocServer(BaseAllocServer):
                 server_snapshot_id=self.server_snapshot_id,
             )
         else:
-            pass
+            AliCloudSpecUseNoInPoolByJob.pull(
+                self.server_info,
+                server_snapshot_id=self.server_snapshot_id,
+            )
         self.job_info[spec_std_key_no_in_pool] = self.server_info
 
     def spec_cluster_server(self):
