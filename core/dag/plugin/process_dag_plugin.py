@@ -87,8 +87,8 @@ class ProcessDagPlugin:
         old_server_id = meta_data[ServerFlowFields.SERVER_ID]
         old_snapshot_server_id = meta_data[ServerFlowFields.SERVER_SNAPSHOT_ID]
         if provider == ServerProvider.ALI_CLOUD:
-            new_cloud_server = Alc.get_cloud_server(job_id, old_server_id)
-            DagStepInstance.update_cloud_server_info(dag_id, new_cloud_server, old_snapshot_server_id)
+            new_cloud_server = Alc.get_cloud_server(job_id, old_server_id, old_snapshot_server_id)
+            DagStepInstance.update_cloud_server_info(dag_id, new_cloud_server)
 
     @classmethod
     def update_server_os_type(cls, meta_data):
