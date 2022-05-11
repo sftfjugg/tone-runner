@@ -1,4 +1,5 @@
 import json
+import random
 
 import config
 import time
@@ -427,26 +428,38 @@ class StepCommon:
         )
         test_job = TestJob.get_by_id(job_id)
         kernel = test_job.kernel_version or ""
-        ResultFile.create(
+        if ResultFile.filter(
             test_job_id=job_id,
             test_suite_id=test_suite_id,
             test_case_id=test_case_id,
             result_path=result_path,
             result_file=result_file
-        )
-        ArchiveFile.create(
-            ws_name=test_job.ws_name,
-            project_name=test_job.project_name,
-            test_plan_id=test_job.plan_id,
-            test_job_id=job_id,
-            test_suite_id=test_suite_id,
-            test_case_id=test_case_id,
-            sn=sn if sn else "",
-            kernel=kernel,
-            arch="",
-            archive_link="",
-            test_date=utils.get_now()
-        )
+        ).exists():
+            result_logger.warning(
+                f"Repeat to save result file, job_id:{job_id}, test_suite_id: {test_suite_id}, "
+                f"test_case_id: {test_case_id}"
+            )
+        else:
+            ResultFile.create(
+                test_job_id=job_id,
+                test_suite_id=test_suite_id,
+                test_case_id=test_case_id,
+                result_path=result_path,
+                result_file=result_file
+            )
+            ArchiveFile.create(
+                ws_name=test_job.ws_name,
+                project_name=test_job.project_name,
+                test_plan_id=test_job.plan_id,
+                test_job_id=job_id,
+                test_suite_id=test_suite_id,
+                test_case_id=test_case_id,
+                sn=sn if sn else "",
+                kernel=kernel,
+                arch="",
+                archive_link="",
+                test_date=utils.get_now()
+            )
 
     @classmethod
     def _calc_conf_result(cls, job_id, test_case_id):
@@ -534,6 +547,7 @@ def check_step_exists(func):
         meta_data = args[1]
         stage = meta_data[ServerFlowFields.STEP]
         dag_step_id = meta_data[ServerFlowFields.DAG_STEP_ID]
+        time.sleep(random.uniform(0, 1))
         test_step = TestStep.filter(stage=stage, dag_step_id=dag_step_id).first()
         if test_step:
             logger.error(f"Step is exists! step_id: {test_step.id}")

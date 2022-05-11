@@ -89,9 +89,10 @@ class PerformanceTest(BaseTest):
                     test_job_id=job_id,
                     test_suite_id=test_suite_id,
                     test_case_id=test_case_id,
-                    metric="default",
+                    metric=metric,
                 ).exists():
-                    logger.error(f'_save_data_to_db re-parse result, job_id: {job_id}, step_id: {step_id}')
+                    logger.error(f'_save_data_to_db re-parse result, job_id: {job_id}, '
+                                 f'step_id: {step_id}, metric: {metric}')
                 else:
                     logger.info(
                         f"save data to perf_result, job_id:{job_id}, "
