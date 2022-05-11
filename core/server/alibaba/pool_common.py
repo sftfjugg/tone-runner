@@ -73,7 +73,7 @@ class PoolCommonOperation:
             snapshot_server_id = snapshot_server.id
             server_ip = snapshot_server.ip
             channel_type = snapshot_server.channel_type or ChannelType.STAR_AGENT
-            default_info[ServerFlowFields.SERVER_ID] = ''
+            default_info[ServerFlowFields.SERVER_ID] = server_ip
             default_info[ServerFlowFields.SERVER_SNAPSHOT_ID] = snapshot_server_id
             default_info[ServerFlowFields.SERVER_IP] = server_ip
             default_info[ServerFlowFields.SERVER_SN] = get_sn_by_ip(server_ip)
@@ -96,7 +96,7 @@ class PoolCommonOperation:
             snapshot_server_id = snapshot_server.id
             server_ip = snapshot_server.server_ip
             channel_type = snapshot_server.channel_type or ChannelType.TONE_AGENT
-            default_info[ServerFlowFields.SERVER_ID] = ''
+            default_info[ServerFlowFields.SERVER_ID] = server_ip
             default_info[ServerFlowFields.SERVER_SNAPSHOT_ID] = snapshot_server_id
             default_info[ServerFlowFields.SERVER_IP] = server_ip
             default_info[ServerFlowFields.SERVER_SN] = snapshot_server.server_sn
