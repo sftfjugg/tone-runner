@@ -99,9 +99,9 @@ class AliCloudStep(AliGroupStep):
         cloud_server_ip = cloud_server.pub_ip
         cloud_private_ip = cloud_server.private_ip
         try:
-            image = cloud_server.image.lower()
-            arch = 'aarch_64' if 'arm64' in image else 'x86_64'
-            os_type = 'debian' if 'debian' in cloud_server.image or 'ubuntu' in image else 'linux'
+            image = cloud_server.image_name.lower() or cloud_server.image.lower()
+            arch = 'aarch_64' if 'arm64' in image or 'aarch' in image else 'x86_64'
+            os_type = 'debian' if 'debian' in image or 'ubuntu' in image else 'linux'
             logger.info(
                 f"Cloud server({cloud_server.instance_id}-{cloud_server_ip})"
                 f" deploying, provider:{provider}.image:{image}, arch:{arch}, os_type:{os_type}"
