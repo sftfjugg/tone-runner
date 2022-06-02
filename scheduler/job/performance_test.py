@@ -16,7 +16,7 @@ from tools.log_util import LoggerFactory
 from .base_test import BaseTest
 
 
-logger = LoggerFactory.scheduler()
+logger = LoggerFactory.job_result()
 
 
 class PerformanceTest(BaseTest):
