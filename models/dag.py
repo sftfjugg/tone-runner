@@ -41,6 +41,11 @@ class DagStepInstance(BaseModel):
         return step_data.get(ServerFlowFields.BASELINE_ID, 0)
 
     @property
+    def baseline_job_id(self):
+        step_data = json.loads(self.step_data)
+        return step_data.get(ServerFlowFields.BASELINE_JOB_ID, 0)
+
+    @property
     def cluster_id(self):
         step_data = json.loads(self.step_data)
         return step_data.get(ServerFlowFields.CLUSTER_ID)

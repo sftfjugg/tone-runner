@@ -443,6 +443,7 @@ class ServerFlowFields:
     JOB_CASE_ID = "job_case_id"
     TEST_TYPE = "test_type"
     BASELINE_ID = "baseline_id"
+    BASELINE_JOB_ID = "baseline_job_id"
     SERVER_PROVIDER = "server_provider"
     RUN_MODE = "run_mode"
     RUN_STRATEGY = "run_strategy"

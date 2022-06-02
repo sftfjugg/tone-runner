@@ -86,6 +86,7 @@ class JobStepInCase(BaseStepPlugin):
                 ServerFlowFields.JOB_CASE_ID: self.job_case_id,
                 ServerFlowFields.STEP: StepStage.RUN_CASE,
                 ServerFlowFields.BASELINE_ID: self.job.baseline_id,
+                ServerFlowFields.BASELINE_JOB_ID: self.job.baseline_job_id,
                 JobCfgFields.ENV_INFO: self.env_info
             }
         )

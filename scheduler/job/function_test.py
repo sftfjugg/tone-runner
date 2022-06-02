@@ -97,9 +97,12 @@ class FunctionTest(BaseTest):
     @classmethod
     def compare_baseline(cls, dag_step):
         baseline_id = dag_step.baseline_id
-        if baseline_id:
-            results = FuncResult.filter(dag_step_id=dag_step.id, sub_case_result=CaseResultTone.Fail.value)
-            for result in results:
+        baseline_job_id = dag_step.baseline_job_id
+        if not (baseline_id or baseline_job_id):
+            return
+        results = FuncResult.filter(dag_step_id=dag_step.id, sub_case_result=CaseResultTone.Fail.value)
+        for result in results:
+            if baseline_id:
                 func_baseline_detail = FuncBaselineDetail.get_or_none(
                     baseline_id=baseline_id,
                     test_suite_id=result.test_suite_id,
@@ -111,4 +114,14 @@ class FunctionTest(BaseTest):
                         result.match_baseline = DbField.TRUE
                     result.description = func_baseline_detail.description
                     result.bug = func_baseline_detail.bug
-                    result.save()
+            else:
+                func_baseline_job = FuncResult.get_or_none(
+                    test_job_id=baseline_job_id,
+                    test_suite_id=result.test_suite_id,
+                    test_case_id=result.test_case_id,
+                    sub_case_name=result.sub_case_name,
+                    sub_case_result=CaseResultTone.Fail.value
+                )
+                if func_baseline_job:
+                    result.match_baseline = DbField.TRUE
+            result.save()

@@ -130,12 +130,15 @@ class PerformanceTest(BaseTest):
     @classmethod
     def compare_baseline(cls, dag_step):
         baseline_id = dag_step.baseline_id
-        if baseline_id:
-            results_perf = PerfResult.filter(dag_step_id=dag_step.id)
-            for result in results_perf:
-                test_suite_id = result.test_suite_id
-                test_case_id = result.test_case_id
-                metric = result.metric
+        baseline_job_id = dag_step.baseline_job_id
+        if not (baseline_id or baseline_job_id):
+            return
+        results_perf = PerfResult.filter(dag_step_id=dag_step.id)
+        for result in results_perf:
+            test_suite_id = result.test_suite_id
+            test_case_id = result.test_case_id
+            metric = result.metric
+            if baseline_id:
                 perf_baseline_detail = PerfBaselineDetail.filter(
                     baseline_id=baseline_id,
                     test_suite_id=test_suite_id,
@@ -146,13 +149,25 @@ class PerformanceTest(BaseTest):
                     cls._compare_baseline_to_result(
                         result, test_suite_id, test_case_id, perf_baseline_detail.first()
                     )
+            else:
+                perf_baseline_job = PerfResult.filter(
+                    test_job_id=baseline_job_id,
+                    test_suite_id=test_suite_id,
+                    test_case_id=test_case_id,
+                    metric=metric
+                )
+                if perf_baseline_job.exists():
+                    cls._compare_baseline_to_result(
+                        result, test_suite_id, test_case_id, perf_baseline_job.first(), baseline_type='job'
+                    )
 
     @classmethod
-    def _compare_baseline_to_result(cls, result, test_suite_id, test_case_id, perf_baseline_detail):
+    def _compare_baseline_to_result(cls, result, test_suite_id, test_case_id,
+                                    perf_baseline_obj, baseline_type='baseline'):
         track_result = TrackResult.NA
         test_value = result.test_value
-        baseline_value = perf_baseline_detail.test_value
-        baseline_cv_value = perf_baseline_detail.cv_value
+        baseline_value = perf_baseline_obj.test_value
+        baseline_cv_value = perf_baseline_obj.cv_value
         test_value_, baseline_value_ = float(test_value), float(baseline_value)
         cv_value = float(result.cv_value.split("%")[0][1:])
         compare_result = (test_value_ - baseline_value_) / baseline_value_ if baseline_value_ else 0.00
@@ -168,7 +183,8 @@ class PerformanceTest(BaseTest):
             if has_suite_metric:
                 track_result = cls._get_track_result(compare_result, has_suite_metric, cv_value)
         result.match_baseline = DbField.TRUE
-        result.compare_baseline = perf_baseline_detail.baseline_id
+        if baseline_type == 'baseline':
+            result.compare_baseline = perf_baseline_obj.baseline_id
         result.baseline_value = baseline_value
         result.baseline_cv_value = baseline_cv_value
         result.compare_result = compare_result
