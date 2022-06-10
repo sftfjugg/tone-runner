@@ -205,6 +205,7 @@ class CommonDbServerOperation:
 
     @classmethod
     def set_server_broken(cls, server, job_id, error_msg):
+        server.history_state = server.state
         server.state = ServerState.BROKEN
         server.spec_use = SpecUseType.NO_SPEC_USE
         server.occupied_job_id = None
