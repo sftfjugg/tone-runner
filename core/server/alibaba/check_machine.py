@@ -11,6 +11,7 @@ from models.server import TestServer, CloudServer, get_server_model_by_provider,
     update_server_state_log
 from models.sysconfig import BaseConfig
 from tools.log_util import LoggerFactory
+from scheduler.job.alicloud import AliCloudStep
 from tools import utils
 
 
@@ -124,13 +125,15 @@ class RealStateCorrection:
         for server in server_list:
             try:
                 channel_type, server_ip = server.channel_type, server.server_ip
-                check_res, error_msg = ExecChannel.check_server_status(channel_type, server_ip)
+                check_res, error_msg = ExecChannel.check_server_status(channel_type, server_ip, max_retries=1)
             except ExecChanelException as error:
                 check_res = False
                 summary_logger.error('update server real state, check server error: {}'.format(error))
             finally:
                 state = RealStateCorrection._get_server_use_state(server, check_res)
                 real_state = ServerState.AVAILABLE if check_res else ServerState.BROKEN
+                if provider == ServerProvider.ALI_CLOUD and not AliCloudStep.existed_instance(server):
+                    state = ServerState.UNUSABLE
                 server_model.update(
                     state=state,
                     real_state=real_state,
