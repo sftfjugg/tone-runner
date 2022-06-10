@@ -188,6 +188,26 @@ class AliCloudStep(AliGroupStep):
                 return False
 
     @classmethod
+    def existed_instance(cls, cloud_server):
+        if cloud_server:
+            try:
+                logger.info(f"Release instance, cloud_server_data:{cloud_server.__data__}")
+                instance_id = cloud_server.instance_id
+                cloud_inst_meta = PoolCommonOperation.get_cloud_instance_meta_data(cloud_server)
+                provider_info = ProviderInfo(**cloud_inst_meta)
+                provider_info.name.replace(".", "")
+                cloud_driver = get_cloud_driver(provider_info)
+                exist_instance = cloud_driver.show_instance([instance_id])
+                if not exist_instance or len(exist_instance) == 0:
+                    return False
+                return True
+            except Exception as error:
+                error_msg = f"check instance for {instance_id} has error: " + str(error)
+                logger.error(error_msg)
+                return False
+        return False
+
+    @classmethod
     @check_step_exists
     def _prepare(cls, meta_data):
         cls._cluster_ssh_free_login(meta_data, cls._ssh_free_login)
