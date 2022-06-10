@@ -371,6 +371,7 @@ class CloudAk(BaseModel):
     access_id = peewee.CharField(max_length=128)
     access_key = peewee.CharField(max_length=1024)
     resource_group_id = peewee.CharField(max_length=32)
+    vm_quota = peewee.CharField(max_length=8)
     description = peewee.CharField(max_length=1024)
     ws_id = peewee.CharField(max_length=8)
 
