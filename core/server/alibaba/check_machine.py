@@ -110,7 +110,10 @@ class RealStateCorrection:
             duration_check = \
                 RealStateCorrection._get_span_min(server.broken_at) > protect_duration
             if all([check_res, need_update_server_state, duration_check]):
-                state = ServerState.AVAILABLE
+                if state == ServerState.BROKEN:
+                    state = server.history_state
+                else:
+                    state = ServerState.AVAILABLE
         return state
 
     @staticmethod
@@ -135,7 +138,7 @@ class RealStateCorrection:
                 ).where(
                     server_model.id == server.id
                 ).execute()
-                if state == ServerState.AVAILABLE:
+                if state == ServerState.AVAILABLE or state == ServerState.RESERVED:
                     ServerRecoverRecord.create(sn=server.sn,
                                                ip=server.ip if provider == ServerProvider.ALI_GROUP else server.pub_ip,
                                                reason='check is available and out of duration',
