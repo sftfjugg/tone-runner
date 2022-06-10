@@ -45,6 +45,7 @@ class TestServer(BaseModel):
     owner = peewee.IntegerField()
     description = peewee.CharField()
     real_state = peewee.CharField()
+    history_state = peewee.CharField(default=ServerState.AVAILABLE, help_text='历史状态')
     check_state_time = peewee.DateTimeField()
     occupied_job_id = peewee.IntegerField()
     ws_id = peewee.CharField()
@@ -108,6 +109,7 @@ class CloudServer(BaseModel):
     owner = peewee.IntegerField()
     description = peewee.CharField()
     real_state = peewee.CharField()
+    history_state = peewee.CharField(default=ServerState.AVAILABLE, help_text='历史状态')
     check_state_time = peewee.DateTimeField()
     occupied_job_id = peewee.IntegerField()
     ws_id = peewee.CharField()
@@ -193,6 +195,7 @@ class TestServerSnapshot(BaseModel):
     # 状态及其它
     state = peewee.CharField()
     real_state = peewee.CharField()
+    history_state = peewee.CharField(default=ServerState.AVAILABLE, help_text='历史状态')
     check_state_time = peewee.DateTimeField()
     # state=1 use_type:平台或者用户手动reserve
     use_type = peewee.CharField()
@@ -283,6 +286,7 @@ class CloudServerSnapshot(BaseModel):
     console_conf = peewee.CharField()
     spec_use = peewee.SmallIntegerField(default=0, help_text="是否被job或集群指定使用, 1被集群使用，2被job使用")
     real_state = peewee.CharField()
+    history_state = peewee.CharField(default=ServerState.AVAILABLE, help_text='历史状态')
     check_state_time = peewee.DateTimeField()
     occupied_job_id = peewee.IntegerField(help_text='被哪个任务所占用')
     in_pool = peewee.BooleanField(default=True, help_text='是否在单机池中')
