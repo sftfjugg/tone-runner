@@ -284,6 +284,7 @@ class ServerState:
     OCCUPIED = "Occupied"
     BROKEN = "Broken"
     RESERVED = "Reserved"
+    UNUSABLE = "Unusable"
     NO_AVAILABLE = (OCCUPIED, BROKEN)
 
 
