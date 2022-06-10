@@ -39,10 +39,10 @@ class RealStateCorrection:
         ).limit(self.BATCH_PROCESS_NUM)
         if test_server_list:
             self.test_server_list = list(test_server_list)
-        cloud_server_list = CloudServer.filter(
-            (CloudServer.state == ServerState.BROKEN) | (CloudServer.real_state == ServerState.BROKEN),
-            CloudServer.id > self.last_test_server_id
-        ).limit(self.BATCH_PROCESS_NUM)
+        cloud_server_list = CloudServer.filter((CloudServer.is_instance == 1) &
+                                               ((CloudServer.state == ServerState.BROKEN) |
+                                                (CloudServer.real_state == ServerState.BROKEN)),
+                                               CloudServer.id > self.last_test_server_id).limit(self.BATCH_PROCESS_NUM)
         if cloud_server_list:
             self.cloud_server_list = list(cloud_server_list)
 
