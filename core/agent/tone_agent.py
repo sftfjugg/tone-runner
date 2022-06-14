@@ -480,9 +480,14 @@ def check_server_os_type(ip, sn=None, retry_times=3):
 
 
 def _check_server_os_type(ip, sn=None):
+    debian_os_criterion = [
+        'debian',
+        'ubuntu',
+        'uos'
+    ]
     result = ToneAgentClient().do_exec(
         ip=ip,
-        command="lsb_release -d",
+        command="cat /etc/os-release | grep -i id=",
         sync="true",
         timeout=10,
         sn=sn
@@ -492,7 +497,8 @@ def _check_server_os_type(ip, sn=None):
         return
     if result["RESULT"]["TASK_STATUS"] == "success":
         os_type_str = result["RESULT"]["TASK_RESULT"].lower()
-        if "ubuntu" in os_type_str or "debian" in os_type_str:
-            return "debian"
+        for item in debian_os_criterion:
+            if item in os_type_str:
+                return "debian"
         else:
             return "linux"
