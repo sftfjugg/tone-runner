@@ -483,7 +483,8 @@ def _check_server_os_type(ip, sn=None):
     debian_os_criterion = [
         'debian',
         'ubuntu',
-        'uos'
+        'uos',
+        'kylin',
     ]
     result = ToneAgentClient().do_exec(
         ip=ip,
