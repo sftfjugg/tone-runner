@@ -149,7 +149,8 @@ class EcsDriver(LibCloudECSDriver, RpcRequest):
                             if node.get(un_serializable_item_key):
                                 node.pop(un_serializable_item_key)
                         nodes_list.append(node)
-
+        else:
+            return nodes
         return nodes_list
 
     def stop_instance(self, instance_id, force_stop=True):
