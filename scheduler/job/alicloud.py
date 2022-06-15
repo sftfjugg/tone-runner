@@ -17,7 +17,7 @@ from core.server.alibaba.pool_common import PoolCommonOperation
 from lib.cloud.provider import get_cloud_driver, Provider
 from lib.cloud.provider_info import ProviderInfo
 from models.job import TestStep, TestJob
-from models.server import CloudServer, CloudServerSnapshot
+from models.server import CloudServer, CloudServerSnapshot, CloudAk
 from models.user import User
 from tools.log_util import LoggerFactory
 from .aligroup import AliGroupStep
@@ -57,6 +57,16 @@ class AliCloudStep(AliGroupStep):
                 template_cloud_server = CloudServer.get_by_id(server_id)
             else:
                 template_cloud_server = CloudServerSnapshot.get_by_id(snapshot_server_id)
+            ak_id = template_cloud_server.ak_id
+            cloud_ak = CloudAk.select().filter(id=ak_id).first()
+            if cloud_ak and cloud_ak.vm_quota and cloud_ak.vm_quota != '*':
+                ak_server_count = CloudServer.select(CloudServer.id).where(CloudServer.ak_id == ak_id,
+                                                                           CloudServer.is_instance == 1).count()
+                if ak_server_count >= int(cloud_ak.vm_quota):
+                    logger.error(
+                        f"job<{job_id}> create cloud instance by server <{server_id}> out of vm_quota."
+                    )
+                    raise ExecStepException('create cloud instance out of vm_quota.')
             new_cloud_server_data = template_cloud_server.__data__.copy()
             job_obj = TestJob.get_by_id(job_id)
             user = User.get_or_none(id=job_obj.creator)
