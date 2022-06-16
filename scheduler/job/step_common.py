@@ -91,8 +91,7 @@ class StepCommon:
         sn = meta_data.get(ServerFlowFields.SERVER_SN)
         script = meta_data[JobCfgFields.SCRIPT]
         env_info = meta_data.get(JobCfgFields.ENV_INFO, dict())
-        if channel_type == ChannelType.STAR_AGENT:
-            script = cls._get_ag_script(script, job_id, env_info)
+        script = cls._get_ag_script(script, job_id, env_info)
         if channel_type == ChannelType.TONE_AGENT:
             cls._get_tone_agent_env(job_id, env_info)
             provider = meta_data[ServerFlowFields.SERVER_PROVIDER]
@@ -188,12 +187,13 @@ class StepCommon:
             )
         else:
             script = cls._get_tone_agent_script(script_flag)
+            script_with_env = cls._get_ag_script(script, job_id, env_info, hot_fix)
             if run_mode == RunMode.CLUSTER and \
                     stage in [StepStage.RUN_CASE, StepStage.INITIAL,
                               StepStage.INSTALL_KERNEL, StepStage.CHECK_KERNEL_INSTALL]:
                 if provider == ServerProvider.ALI_GROUP:
                     cluster_server = Cs.get_cluster_server(cluster_id, provider, is_run=True)
-                    script = cls._inject_cluster_env(script, cluster_server)
+                    script = cls._inject_cluster_env(script_with_env, cluster_server)
             return script
 
     @classmethod
