@@ -183,7 +183,7 @@ class AliCloudStep(AliGroupStep):
                     logger.error(error_msg)
                 return cloud_driver.destroy_instance(instance_id)
             except Exception as error:
-                error_msg = f"destroy instance for {instance_id} has error: " + str(error)
+                error_msg = f"destroy instance for {instance_id} has error: {str(error)}"
                 logger.error(error_msg)
                 return False
 
