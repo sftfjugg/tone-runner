@@ -108,13 +108,14 @@ class RealStateCorrection:
             )
             protect_duration = 5 if len(protect_duration_config) == 0 \
                 else float(protect_duration_config[0].config_value)
-            duration_check = \
-                RealStateCorrection._get_span_min(server.broken_at) > protect_duration
-            if all([check_res, need_update_server_state, duration_check]):
-                if state == ServerState.BROKEN:
-                    state = server.history_state
-                else:
-                    state = ServerState.AVAILABLE
+            if server.broken_at:
+                duration_check = \
+                    RealStateCorrection._get_span_min(server.broken_at) > protect_duration
+                if all([check_res, need_update_server_state, duration_check]):
+                    if state == ServerState.BROKEN:
+                        state = server.history_state
+                    else:
+                        state = ServerState.AVAILABLE
         return state
 
     @staticmethod
