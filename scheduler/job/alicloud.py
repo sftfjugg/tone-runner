@@ -179,7 +179,7 @@ class AliCloudStep(AliGroupStep):
                 try:
                     ToneAgentClient('remove').remove_agent(cloud_server.private_ip)
                 except Exception as e:
-                    error_msg = f"remove toneagent for {instance_id} has error: " + str(e)
+                    error_msg = f"remove toneagent for {instance_id} has error: {str(e)}"
                     logger.error(error_msg)
                 return cloud_driver.destroy_instance(instance_id)
             except Exception as error:
@@ -202,7 +202,7 @@ class AliCloudStep(AliGroupStep):
                     return False
                 return True
             except Exception as error:
-                error_msg = f"check instance for {instance_id} has error: " + str(error)
+                error_msg = f"check instance for {instance_id} has error: {str(error)}"
                 logger.error(error_msg)
                 return False
         return False
