@@ -62,7 +62,7 @@ class AliCloudStep(AliGroupStep):
             if cloud_ak and cloud_ak.vm_quota and cloud_ak.vm_quota != '*':
                 ak_server_count = CloudServer.select(CloudServer.id).where(CloudServer.ak_id == ak_id,
                                                                            CloudServer.is_instance == 1).count()
-                if ak_server_count >= int(cloud_ak.vm_quota):
+                if isinstance(cloud_ak.vm_quota, int) and ak_server_count >= int(cloud_ak.vm_quota):
                     logger.error(
                         f"job<{job_id}> create cloud instance by server <{server_id}> out of vm_quota."
                     )
