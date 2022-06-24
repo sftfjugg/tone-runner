@@ -547,9 +547,6 @@ class JobComplete:
                     self.SOURCE_STORE.hdel(ProcessDataSource.USING_SERVER, key)
 
     def update_job_info(self):
-        if self.job.product_version:
-            return
-        # 如果没有product_version，则从版本命令获取结果
         if self.job.server_provider == 'aligroup':
             snapshot_model = TestServerSnapshot
         else:
@@ -562,10 +559,10 @@ class JobComplete:
             job_id=self.job_id).group_by(
             snapshot_model.product_version
         )
-        if len(kernel_version_count) == 1:
+        if not self.job.show_kernel_version and len(kernel_version_count) == 1:
             kernel_version = snapshot_model.filter(job_id=self.job_id)[0].kernel_version
             self.job.show_kernel_version = kernel_version
-        if len(product_version_count) == 1:
+        if not self.job.product_version and len(product_version_count) == 1:
             product_version = snapshot_model.filter(job_id=self.job_id)[0].product_version
             self.job.product_version = product_version
         self.job.save()
