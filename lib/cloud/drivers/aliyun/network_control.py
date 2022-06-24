@@ -256,6 +256,8 @@ class NetWorkControl(object):
             request = DescribeSecurityGroupsRequest.DescribeSecurityGroupsRequest()
             if vpc_id:
                 request.set_VpcId(vpc_id)
+            if self.resource_group_id:
+                request.set_ResourceGroupId(self.resource_group_id)
             request.set_PageSize(page_size)
             try:
                 response = self.client.do_action_with_exception(request)
