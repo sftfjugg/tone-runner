@@ -560,10 +560,10 @@ class JobComplete:
             snapshot_model.product_version
         )
         if not self.job.show_kernel_version and len(kernel_version_count) == 1:
-            kernel_version = snapshot_model.filter(job_id=self.job_id)[0].kernel_version
+            kernel_version = snapshot_model.filter(job_id=self.job_id).first().kernel_version
             self.job.show_kernel_version = kernel_version
         if not self.job.product_version and len(product_version_count) == 1:
-            product_version = snapshot_model.filter(job_id=self.job_id)[0].product_version
+            product_version = snapshot_model.filter(job_id=self.job_id).first().product_version
             self.job.product_version = product_version
         self.job.save()
 
