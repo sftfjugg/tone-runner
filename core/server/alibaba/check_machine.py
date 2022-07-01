@@ -112,7 +112,8 @@ class RealStateCorrection:
                 duration_check = \
                     RealStateCorrection._get_span_min(server.broken_at) > protect_duration
                 if all([check_res, need_update_server_state, duration_check]):
-                    if state == ServerState.BROKEN:
+                    if state == ServerState.BROKEN and (server.history_state == ServerState.RESERVED or
+                                                        server.history_state == ServerState.UNUSABLE):
                         state = server.history_state
                     else:
                         state = ServerState.AVAILABLE
