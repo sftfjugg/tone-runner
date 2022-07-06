@@ -52,8 +52,11 @@ class ToneAgentRequest(object):
         url = '{domain}/{api}'.format(domain=self._domain, api=api)
         logger.info(f"request_url: {url}, request_data: {self._data}")
         result = requests.post(url, json=self._data, verify=False)
-        logger.info(f"request result: {result.text}")
-        return result.json()
+        try:
+            return result.json()
+        except Exception as e:
+            logger.info(f"send toneagent request failed: url:{url} | data: {self._data} | {result.text}")
+            return {'SUCCESS': False, 'ERROR_MSG': f'request failed! url:{url} | data: {self._data} | {e}'}
 
 
 class SendTaskRequest(ToneAgentRequest):
