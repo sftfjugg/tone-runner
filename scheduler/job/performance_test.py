@@ -6,7 +6,7 @@ from constant import (
     PerfResultType,
     DbField,
     TestMetricType,
-    TrackResult
+    TrackResult, ExecState
 )
 from models.job import TestJobCase
 from models.result import PerfResult
@@ -53,10 +53,10 @@ class PerformanceTest(BaseTest):
         logger.info(f"job: {job_id} save_perf_data step: {step_id} url: {url}")
         test_job_case = TestJobCase.get_by_id(step.job_case_id)
         test_suite_id, test_case_id = test_job_case.test_suite_id, test_job_case.test_case_id
-        cls._parse_data_by_statistic(job_id, step_id, dag_step_id, url, test_suite_id, test_case_id, repeat)
+        cls._parse_data_by_statistic(job_id, step_id, dag_step_id, url, test_suite_id, test_case_id, repeat, step)
 
     @classmethod
-    def _parse_data_by_statistic(cls, job_id, step_id, dag_step_id, url, test_suite_id, test_case_id, repeat):
+    def _parse_data_by_statistic(cls, job_id, step_id, dag_step_id, url, test_suite_id, test_case_id, repeat, step):
         logger.info(f"parse data by statistic, job_id: {job_id}, step_id: {step_id}, url: {url}")
         try:
             statistic_url = url + 'statistic.json'
@@ -64,6 +64,9 @@ class PerformanceTest(BaseTest):
             logger.info(f"request by avg, statistic_url:{statistic_url}, response: {response.text}")
             if response.ok:
                 data = json.loads(response.text)
+                if data["status"] == 'fail':
+                    step.state = ExecState.FAIL
+                    step.save()
                 cls._save_data_to_db(job_id, step_id, dag_step_id, test_suite_id, test_case_id, data, repeat)
         except Exception as error:
             error = str(error)

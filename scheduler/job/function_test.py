@@ -2,7 +2,7 @@ import re
 import json
 import requests
 from core.exception import CheckStepException
-from constant import CaseResultTone, TestType, DbField
+from constant import CaseResultTone, TestType, DbField, ExecState
 from models.job import TestJobCase
 from models.result import FuncResult
 from models.baseline import FuncBaselineDetail
@@ -42,11 +42,15 @@ class FunctionTest(BaseTest):
                     response = requests.get(file_url)
                     logger.info(f"send result file request, file_url:{file_url}, response: {response.text}")
                     if response.ok:
+                        statistic_data = json.loads(response.text)
                         cls.save_statistic_data(
                             job_id, dag_step_id, test_suite_id,
-                            test_case_id, json.loads(response.text)
+                            test_case_id, statistic_data
                         )
                         parsed = True
+                        if statistic_data["status"] == 'fail':
+                            step.state = ExecState.FAIL
+                            step.save()
             except Exception as error:
                 logger.error('save_result error, detail:{}'.format(str(error)),)
                 logger.exception(
