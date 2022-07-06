@@ -126,7 +126,8 @@ class RealStateCorrection:
         for server in server_list:
             try:
                 channel_type, server_ip = server.channel_type, server.server_ip
-                check_res, error_msg = ExecChannel.check_server_status(channel_type, server_ip, max_retries=1)
+                check_res, error_msg = ExecChannel.check_server_status(
+                    channel_type, server_ip, max_retries=1, tsn=server.server_tsn)
             except ExecChanelException as error:
                 check_res = False
                 summary_logger.error('update server real state, check server error: {}'.format(error))

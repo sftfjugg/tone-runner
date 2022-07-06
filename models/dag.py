@@ -96,6 +96,18 @@ class DagStepInstance(BaseModel):
         step_data = json.loads(self.step_data)
         return step_data.get(ServerFlowFields.SERVER_SN, "")
 
+    @property
+    def server_tsn(self):
+        step_data = json.loads(self.step_data)
+        return step_data.get(ServerFlowFields.SERVER_TSN, "")
+
+    @server_tsn.setter
+    def server_tsn(self, server_tsn):
+        step_data = json.loads(self.step_data)
+        step_data[ServerFlowFields.SERVER_TSN] = server_tsn
+        self.step_data = json.dumps(step_data)
+        self.save()
+
     @server_sn.setter
     def server_sn(self, server_sn):
         step_data = json.loads(self.step_data)

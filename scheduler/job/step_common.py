@@ -53,6 +53,7 @@ class StepCommon:
         hot_fix = kernel_info.get(JobCfgFields.HOT_FIX, False)
         ip = meta_data.get(ServerFlowFields.SERVER_IP)
         sn = meta_data.get(ServerFlowFields.SERVER_SN)
+        tsn = meta_data.get(ServerFlowFields.SERVER_TSN)
         env_info = meta_data.get(JobCfgFields.ENV_INFO, dict())
         if run_case_step:
             job_case_id = meta_data[ServerFlowFields.JOB_CASE_ID]
@@ -75,6 +76,7 @@ class StepCommon:
             channel_type,
             ip=ip,
             sn=sn,
+            tsn=tsn,
             command=script,
             args=args,
             timeout=timeout,

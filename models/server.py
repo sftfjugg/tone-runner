@@ -105,6 +105,7 @@ class CloudServer(BaseModel):
     state = peewee.CharField(default=ServerState.AVAILABLE)
     channel_type = peewee.CharField()
     sn = peewee.CharField()
+    tsn = peewee.CharField()
     spec_use = peewee.SmallIntegerField(default=0, help_text="是否被集群或job使用, 1被集群使用，2被job使用")
     owner = peewee.IntegerField()
     description = peewee.CharField()
@@ -130,6 +131,10 @@ class CloudServer(BaseModel):
         if self.instance_id:
             return self.instance_id
         return ""
+
+    @property
+    def server_tsn(self):
+        return self.tsn
 
     @property
     def server_provider(self):
@@ -259,6 +264,7 @@ class CloudServerSnapshot(BaseModel):
     system_disk_size = peewee.CharField(help_text='系统盘大小', default=50)
     extra_param = peewee.TextField(help_text='扩展信息')
     sn = peewee.CharField()
+    tsn = peewee.CharField()
     release_rule = peewee.BooleanField()
     # 模板
     template_name = peewee.CharField()
@@ -312,6 +318,10 @@ class CloudServerSnapshot(BaseModel):
         if self.instance_id:
             return self.instance_id
         return ""
+
+    @property
+    def server_tsn(self):
+        return self.tsn
 
     @property
     def server_provider(self):

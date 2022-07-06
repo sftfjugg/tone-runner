@@ -35,6 +35,7 @@ def check_server_before_exec_step(func):
         in_pool = meta_data.get(ServerFlowFields.IN_POOL)
         server_ip = meta_data[ServerFlowFields.SERVER_IP]
         server_sn = meta_data[ServerFlowFields.SERVER_SN]
+        server_tsn = meta_data[ServerFlowFields.SERVER_TSN]
         run_mode = meta_data[ServerFlowFields.RUN_MODE]
         server_model = get_server_model_by_provider(server_provider)
         stage = meta_data[ServerFlowFields.STEP]
@@ -48,7 +49,8 @@ def check_server_before_exec_step(func):
             server = server_model.filter(id=server_id).first()
             check_res = None
             if server:
-                check_res, error_msg = ExecChannel.check_server_status(channel_type, server_ip, sn=server_sn)
+                check_res, error_msg = ExecChannel.check_server_status(
+                    channel_type, server_ip, sn=server_sn, tsn=server_tsn)
                 if not check_res:
                     Oam.set_server_broken_and_send_msg(job_id, server, error_msg=error_msg,
                                                        run_mode=run_mode, cluster_id=cluster_id)
@@ -59,7 +61,8 @@ def check_server_before_exec_step(func):
                     ).execute()
                     logger.info(f"reset server state, job_id:{job_id}, server_id:{server_id}")
         else:
-            check_res, error_msg = ExecChannel.check_server_status(channel_type, server_ip, sn=server_sn)
+            check_res, error_msg = ExecChannel.check_server_status(
+                channel_type, server_ip, sn=server_sn, tsn=server_sn)
             snapshot_server = Cs.get_snapshot_server_by_provider(snapshot_server_id, server_provider)
             if not check_res:
                 Oam.set_server_broken_and_send_msg(
