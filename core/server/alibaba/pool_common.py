@@ -181,6 +181,7 @@ class PoolCommonOperation:
             default_info[ServerFlowFields.SERVER_IP] = server_ip
             default_info[ServerFlowFields.PRIVATE_IP] = private_ip
             default_info[ServerFlowFields.SERVER_SN] = cloud_server.server_sn
+            default_info[ServerFlowFields.SERVER_TSN] = cloud_server.server_tsn
             default_info[ServerFlowFields.CHANNEL_TYPE] = channel_type
             default_info[ServerFlowFields.CLOUD_INST_META] = cloud_inst_meta
             default_info[ServerFlowFields.READY] = ServerReady.READY

@@ -53,7 +53,8 @@ class AllocServer(BaseAllocServer):
                             ServerFlowFields.JOB_CASE_ID: self.job_case_id,
                             ServerFlowFields.SERVER_PROVIDER: self.server_provider,
                             ServerFlowFields.TEST_TYPE: job_case.test_type,
-                            ServerFlowFields.IN_POOL: True
+                            ServerFlowFields.IN_POOL: True,
+                            ServerFlowFields.SERVER_TSN: ''
                             }
 
     def rand_standalone_server(self):

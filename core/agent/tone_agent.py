@@ -7,6 +7,8 @@ import hmac
 import time
 import config
 from core.exception import AgentRequestException
+from models.dag import Dag, DagStepInstance
+from models.server import CloudServer, CloudServerSnapshot
 from tools.config_parser import cp
 from tools.log_util import LoggerFactory
 __doc__ = "https://yuque.antfin-inc.com/ostest/ducrbe/sw29z7"
@@ -222,9 +224,11 @@ class ToneAgentClient:
             self.add_request = AddAgentRequest(self.access_key, self.secret_key)
 
     def do_exec(self, ip=None, command=None, args="", script_type="shell",
-                env=None, cwd=None, sync="false", timeout=60, sn=None):
+                env=None, cwd=None, sync="false", timeout=60, sn=None, tsn=None):
         if ip:
             self.exec_request.set_ip(ip)
+        if tsn:
+            self.exec_request.set_tsn(tsn)
         else:
             self.exec_request.set_ip(sn)
         if env:
@@ -270,8 +274,8 @@ class ToneAgentClient:
         logger.info(f"remove server {ip_list}")
         return self.remove_request.send_request()
 
-    def check_status(self, ip, sn=None):
-        result = self.do_exec(ip=ip, command="uptime", sync="true", timeout=10, sn=sn)
+    def check_status(self, ip, sn=None, tsn=None):
+        result = self.do_exec(ip=ip, command="uptime", sync="true", timeout=10, sn=sn, tsn=tsn)
         logger.info(f"{ip} check server status result is: {result}")
         if result["SUCCESS"]:
             result = result["RESULT"]
@@ -407,6 +411,16 @@ def deploy_agent(**kwargs):
         raise AgentRequestException("Tone-agent deploy request fail.")
 
 
+def _update_data_after_deploy_agent(tsn, instance_id, ip):
+    CloudServer.update(tsn=tsn).where(CloudServer.instance_id == instance_id).execute()
+    CloudServerSnapshot.update(tsn=tsn).where(CloudServerSnapshot.instance_id == instance_id).execute()
+    job_id = CloudServerSnapshot.get(CloudServerSnapshot.instance_id == instance_id).job_id
+    dag_id = Dag.get(Dag.job_id == job_id).id
+    for dag_step in DagStepInstance.filter(DagStepInstance.dag_id == dag_id):
+        if dag_step.server_ip == ip:
+            dag_step.server_tsn = tsn
+
+
 def deploy_agent_by_ecs_assistant(
         instance_id, ip, public_ip, cloud_driver,
         mode='active', arch='x86_64', os_type='linux'):
@@ -437,16 +451,19 @@ def deploy_agent_by_ecs_assistant(
     tsn = add_agent_result['RESULT']['TSN']
     rpm_link = add_agent_result['RESULT']['RPM_LINK']
 
-    # 2.调用云助手部署agent
+    # 2.更新cloud_server表中的tsn
+    _update_data_after_deploy_agent(tsn, instance_id, ip)
+
+    # 3.调用云助手部署agent
     return cloud_driver.deploy_agent(instance_id, tsn, rpm_link, os_type)
 
 
-def check_server_status(ip, sn=None, max_retries=5, interval=1):
+def check_server_status(ip, sn=None, max_retries=5, interval=1, tsn=None):
     check_cnt, check_res = 0, False
     error_msg = ""
     while check_cnt < max_retries:
         try:
-            check_res = ToneAgentClient().check_status(ip, sn)
+            check_res = ToneAgentClient().check_status(ip, sn, tsn=tsn)
         except Exception as error:
             error_msg = str(error)
             logger.exception(f"Tone-agent request has error {error_msg}, traceback:")

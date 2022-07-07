@@ -154,7 +154,7 @@ class CheckJobStep:
         server_provider = dag_step.server_provider
         agent_res = get_agent_res_obj(channel_type)
         agent_res_status = get_agent_res_status_obj(channel_type)
-        server_ip, server_sn = dag_step.server_ip, dag_step.server_sn
+        server_ip, server_sn, server_tsn = dag_step.server_ip, dag_step.server_sn, dag_step.server_tsn
         status = result[agent_res.STATUS]
         success, job_result = result[agent_res.SUCCESS], result[agent_res.JOB_RESULT] or ""
         error_msg, error_code = result.get(agent_res.ERROR_MSG), result[agent_res.ERROR_CODE]
@@ -177,7 +177,7 @@ class CheckJobStep:
                 cls._check_server_broken(
                     job_id, server_provider, channel_type, server_id,
                     server_ip, server_sn, error_code, agent_res,
-                    in_pool=in_pool, run_mode=run_mode, cluster_id=cluster_id
+                    in_pool=in_pool, run_mode=run_mode, cluster_id=cluster_id, tsn=server_tsn
                 )
                 test_step.state = ExecState.FAIL
                 test_step.result = result
@@ -252,7 +252,8 @@ class CheckJobStep:
                     success, result = ExecChannel.do_exec(
                         channel_type, ip=ip, command=script,
                         args=arg, env=env_info, sync=False,
-                        timeout=config.UPLOAD_LOG_TIMEOUT
+                        timeout=config.UPLOAD_LOG_TIMEOUT,
+                        tsn=step.server_tsn
                     )
                     if success:
                         logger.info(f"upload log success, job: {job_id} step: {step_id},result: {result}")
@@ -281,9 +282,10 @@ class CheckJobStep:
     @classmethod
     def _check_server_broken(cls, job_id, server_provider, channel_type, server_id, server_ip,
                              server_sn=None, error_code=None, agent_res=None, in_pool=None,
-                             run_mode=None, cluster_id=None):
+                             run_mode=None, cluster_id=None, tsn=None):
         if isinstance(server_id, int):
-            check_success, error_msg = ExecChannel.check_server_status(channel_type, server_ip, sn=server_sn)
+            check_success, error_msg = ExecChannel.check_server_status(
+                channel_type, server_ip, sn=server_sn, tsn=tsn)
             if not check_success or (agent_res and error_code in agent_res.ERROR_CODE_LIST):
                 server_model = get_server_or_snapshot_server(in_pool, server_provider)
                 server = server_model.get_by_id(server_id)

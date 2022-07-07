@@ -376,7 +376,7 @@ class AliGroupDbServerOperation(CommonDbServerOperation):
     @classmethod
     def _check_server_broken(cls, job_id, server, in_pool=True, run_mode=RunMode.STANDALONE, cluster_id=None):
         check_success, error_msg = ExecChannel.check_server_status(
-            server.channel_type, server.ip
+            server.channel_type, server.ip, tsn=server.tsn
         )
         if not check_success:
             Oam.set_server_broken_and_send_msg(
@@ -694,7 +694,7 @@ class AliCloudDbServerOperation(CommonDbServerOperation):
     def _check_server_broken(cls, job_id, server, in_pool=True, run_mode=RunMode.STANDALONE, cluster_id=None):
         if server.is_instance:
             check_success, error_msg = ExecChannel.check_server_status(
-                server.channel_type, server.private_ip
+                server.channel_type, server.private_ip, tsn=server.tsn
             )
             if not check_success:
                 Oam.set_server_broken_and_send_msg(

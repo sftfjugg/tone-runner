@@ -454,6 +454,7 @@ class ServerFlowFields:
     SERVER_IP = "ip"
     PRIVATE_IP = "private_ip"
     SERVER_SN = "sn"
+    SERVER_TSN = "tsn"
     IS_INSTANCE = "is_instance"
     CHANNEL_TYPE = "channel_type"
     READY = "ready"
