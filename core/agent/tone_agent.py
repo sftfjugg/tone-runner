@@ -408,13 +408,14 @@ def deploy_agent(**kwargs):
         raise AgentRequestException("Tone-agent deploy request fail.")
 
 
-def _update_data_after_deploy_agent(tsn, instance_id):
+def _update_data_after_deploy_agent(tsn, instance_id, ip):
     CloudServer.update(tsn=tsn).where(CloudServer.instance_id == instance_id).execute()
     CloudServerSnapshot.update(tsn=tsn).where(CloudServerSnapshot.instance_id == instance_id).execute()
     job_id = CloudServerSnapshot.get(CloudServerSnapshot.instance_id == instance_id).job_id
     dag_id = Dag.get(Dag.job_id == job_id).id
     for dag_step in DagStepInstance.filter(DagStepInstance.dag_id == dag_id):
-        dag_step.server_tsn = tsn
+        if dag_step.server_ip == ip:
+            dag_step.server_tsn = tsn
 
 
 def deploy_agent_by_ecs_assistant(
@@ -448,7 +449,7 @@ def deploy_agent_by_ecs_assistant(
     rpm_link = add_agent_result['RESULT']['RPM_LINK']
 
     # 2.更新cloud_server表中的tsn
-    _update_data_after_deploy_agent(tsn, instance_id)
+    _update_data_after_deploy_agent(tsn, instance_id, ip)
 
     # 3.调用云助手部署agent
     return cloud_driver.deploy_agent(instance_id, tsn, rpm_link, os_type)
