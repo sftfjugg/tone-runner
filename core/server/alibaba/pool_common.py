@@ -268,7 +268,7 @@ class PoolCommonOperation:
         job_state_desc = None
         if not spec_cluster:
             if not cluster_info:
-                job_state_desc = "当前指定集群暂不可用。请检查集群是否被占用、机器内机器是否broken"
+                job_state_desc = "当前指定集群暂不可用，请检查集群及机器状态是否可用。"
             else:
                 server_state = cluster_info.get(ServerFlowFields.SERVER_STATE)
                 if server_state == ServerState.OCCUPIED:
