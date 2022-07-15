@@ -22,7 +22,7 @@ from core.dag.plugin import db_operation
 from core.exec_channel import ExecChannel
 from core.op_acc_msg import OperationAccompanyMsg as Oam
 from core.server.alibaba.base_db_op import CommonDbServerOperation as Cs
-from models.server import TestServerSnapshot, CloudServerSnapshot, TestServer, CloudServer
+from models.server import TestServerSnapshot, CloudServerSnapshot, TestServer, CloudServer, TestCluster
 from models.job import MonitorInfo
 from scheduler.job.base_test import BaseTest
 from constant import (
@@ -546,6 +546,11 @@ class JobComplete:
              (server_model.occupied_job_id.is_null(is_null=True)) |
              (server_model.occupied_job_id == ''))
         ).execute()
+        if TestJobCase.filter(job_id=self.job_id, run_mode='cluster').exists():
+            TestCluster.update(is_occpuied=0, occupied_job_id=None).where(
+                (TestCluster.occupied_job_id == self.job_id) |
+                (TestCluster.occupied_job_id.is_null(is_null=True)) |
+                (TestCluster.occupied_job_id == '')).execute()
         using_server = self.SOURCE_STORE.hgetall(ProcessDataSource.USING_SERVER)
         for key in using_server:
             if using_server[key] == self.job_id:
