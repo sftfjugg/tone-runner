@@ -229,8 +229,6 @@ class ToneAgentClient:
             self.exec_request.set_ip(ip)
         if tsn:
             self.exec_request.set_tsn(tsn)
-        else:
-            self.exec_request.set_ip(sn)
         if env:
             if isinstance(env, dict):
                 tmp_env_list = []
