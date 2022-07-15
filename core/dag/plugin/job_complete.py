@@ -597,13 +597,11 @@ class JobComplete:
             if self.complete_flag not in state_desc:
                 logger.info(f"Job complete process, job_id is {self.job_id}")
                 self.release_server_by_job_deleted_or_exception()
-                with db.atomic():
-                    self.set_job_case_state()
+                self.set_job_case_state()
                 self.set_job_suite_state()
                 self.set_dag_node_state_by_job()
                 self.update_job_info()
-                with db.atomic():
-                    self.set_job_state()
+                self.set_job_state()
                 self.notice()
                 self.save_report()
                 self.remove_monitor()
