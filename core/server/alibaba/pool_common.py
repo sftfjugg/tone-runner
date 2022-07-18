@@ -260,7 +260,7 @@ class PoolCommonOperation:
                     using_id = cls.real_using_id(using_id)
                     job_state_desc = f"当前指定机器被{who_using}({using_id})占用。"
                 elif server_state == ServerState.BROKEN:
-                    job_state_desc = "当前指定机器状态已Broken，请检查。"
+                    job_state_desc = "当前指定机器状态已Broken，请检查机器及agent状态是否可用。"
         Cs.set_job_state_desc(job_id, job_state_desc)
 
     @classmethod
@@ -268,7 +268,7 @@ class PoolCommonOperation:
         job_state_desc = None
         if not spec_cluster:
             if not cluster_info:
-                job_state_desc = "当前指定集群暂不可用。"
+                job_state_desc = "当前指定集群暂不可用，请检查集群及机器状态是否可用。"
             else:
                 server_state = cluster_info.get(ServerFlowFields.SERVER_STATE)
                 if server_state == ServerState.OCCUPIED:
@@ -279,7 +279,7 @@ class PoolCommonOperation:
                     using_id = cls.real_using_id(using_id)
                     job_state_desc = f"当前指定集群被{who_using}({using_id})占用。"
                 elif server_state == ServerState.BROKEN:
-                    job_state_desc = "当前指定集群状态已Broken，请检查。"
+                    job_state_desc = "当前指定集群状态已Broken，请检查机器及agent状态是否可用。"
         Cs.set_job_state_desc(job_id, job_state_desc)
 
     @classmethod

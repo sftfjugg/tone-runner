@@ -15,7 +15,8 @@ class AliGroupTagStdPool(BaseServerPool, PoolCommonOperation):
         tag_server = AliGroupDbServerOperation.get_spec_tag_server(job_id, tag_id_list)
         cls._pull_std_server_in_pool(ws_id, job_id, tag_server, default_info)
         if not default_info.get(ServerFlowFields.READY):
-            job_state_desc = "当前机器池中无指定标签的可用机器。"
+            job_state_desc = "当前机器池中无指定标签的可用机器，" \
+                             "请检查机器及agent状态是否可用"
         AliGroupDbServerOperation.set_job_state_desc(job_id, job_state_desc)
 
 
@@ -30,7 +31,8 @@ class AliGroupTagClusterPool(BaseServerPool, PoolCommonOperation):
         tag_cluster = AliGroupDbServerOperation.get_spec_tag_cluster(ws_id, job_id, tag_id_list)
         cls._pull_cluster_server(job_id, tag_cluster, default_info)
         if not default_info.get(ServerFlowFields.READY):
-            job_state_desc = "当前机器池中无指定标签的可用集群。"
+            job_state_desc = "当前机器池中无指定标签的可用集群，" \
+                             "请检查机器及agent状态是否可用"
         AliGroupDbServerOperation.set_job_state_desc(job_id, job_state_desc)
 
 
@@ -44,7 +46,8 @@ class AliCloudTagStdPool(BaseServerPool, PoolCommonOperation):
         tag_server = AliCloudDbServerOperation.get_spec_tag_server(job_id, tag_id_list)
         cls._pull_cloud_std_server(job_id, tag_server, default_info)
         if not default_info.get(ServerFlowFields.READY):
-            job_state_desc = "当前机器池中无指定标签的可用机器。"
+            job_state_desc = "当前机器池中无指定标签的可用机器，" \
+                             "请检查机器及agent状态是否可用"
         AliCloudDbServerOperation.set_job_state_desc(job_id, job_state_desc)
 
 
@@ -58,5 +61,6 @@ class AliCloudTagClusterPool(BaseServerPool, PoolCommonOperation):
         tag_cluster = AliCloudDbServerOperation.get_spec_tag_cluster(job_id, tag_id_list)
         cls._pull_cloud_cluster_server(job_id, tag_cluster, default_info)
         if not default_info.get(ServerFlowFields.READY):
-            job_state_desc = "当前机器池中无指定标签的可用集群。"
+            job_state_desc = "当前机器池中无指定标签的可用集群，" \
+                             "请检查机器及agent状态是否可用"
         AliCloudDbServerOperation.set_job_state_desc(job_id, job_state_desc)

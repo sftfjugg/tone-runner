@@ -24,7 +24,7 @@ class AliGroupRandStdPool(BaseServerPool, PoolCommonOperation):
         # 不是很大。
         cls._pull_std_server_in_pool(ws_id, job_id, server, default_info)
         if not default_info.get(ServerFlowFields.READY):
-            job_state_desc = "当前机器池无可用机器"
+            job_state_desc = "当前机器池无可用机器，请添加可用机器或修复Broken机器"
         AliGroupDbServerOperation.set_job_state_desc(job_id, job_state_desc)
 
 
@@ -41,7 +41,7 @@ class AliGroupRandClusterPool(BaseServerPool, PoolCommonOperation):
             cluster_server = AliGroupDbServerOperation.get_rand_cluster_by_tag(ws_id, job_id)
         cls._pull_cluster_server(job_id, cluster_server, default_info)
         if not default_info.get(ServerFlowFields.READY):
-            job_state_desc = "当前机器池无可用集群"
+            job_state_desc = "当前机器池无可用集群，请在机器管理里配置可用集群"
         AliGroupDbServerOperation.set_job_state_desc(job_id, job_state_desc)
 
 
@@ -56,7 +56,7 @@ class AliCloudRandStdPool(BaseServerPool, PoolCommonOperation):
         server = AliCloudDbServerOperation.get_rand_server(ws_id, job_id)
         cls._pull_cloud_std_server(job_id, server, default_info)
         if not default_info.get(ServerFlowFields.READY):
-            job_state_desc = "当前机器池无可用机器"
+            job_state_desc = "当前机器池无可用机器，请添加可用机器或修复Broken机器"
         AliCloudDbServerOperation.set_job_state_desc(job_id, job_state_desc)
 
 
@@ -71,5 +71,5 @@ class AliCloudRandClusterPool(BaseServerPool, PoolCommonOperation):
         cluster_server = AliCloudDbServerOperation.get_rand_cluster(ws_id, job_id)
         cls._pull_cloud_cluster_server(job_id, cluster_server, default_info)
         if not default_info.get(ServerFlowFields.READY):
-            job_state_desc = "当前机器池无可用集群"
+            job_state_desc = "当前机器池无可用集群，请在机器管理里配置可用集群"
         AliCloudDbServerOperation.set_job_state_desc(job_id, job_state_desc)
