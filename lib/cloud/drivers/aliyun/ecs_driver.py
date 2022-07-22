@@ -3,7 +3,7 @@ import json
 import time
 
 from aliyunsdkcore.request import RpcRequest
-
+from aliyunsdkecs.request.v20140526.DescribeImagesRequest import DescribeImagesRequest
 
 from config import ECS_LOGIN_PASSWORD
 from libcloud.common.exceptions import BaseHTTPError
@@ -571,3 +571,24 @@ class EcsDriver(LibCloudECSDriver, RpcRequest):
                 'cpu': int(el.find('Cpu').text),
             } for el in instance_el
         ]
+
+    def get_images(self, instance_type=None):
+        try:
+            request = DescribeImagesRequest()
+            request.set_PageSize(100)
+            if instance_type:
+                request.set_InstanceType(instance_type)
+            response = self.client.do_action_with_exception(request)
+            images = json.loads(response)['Images']['Image']
+            return [
+                {
+                    'id': item['ImageId'],
+                    'name': item['ImageName'],
+                    'platform': item['Platform'],
+                    'os_name': item['OSName'],
+                    'owner_alias': item['ImageOwnerAlias']
+                } for item in images
+            ]
+        except Exception as e:
+            logger.error('ecs sdk get_images failed: {}'.format(str(e)))
+            return []

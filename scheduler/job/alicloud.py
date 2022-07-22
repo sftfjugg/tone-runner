@@ -72,6 +72,13 @@ class AliCloudStep(AliGroupStep):
             user = User.get_or_none(id=job_obj.creator)
             instance_name = f"tone-testbox-{user.username}-{job_id}"
             provider_info_dict.update({'name': instance_name})
+            # image_id如果是动态配置，则获取最新image
+            if ':latest' in provider_info_dict['image_id']:
+                latest_image = cls._get_latest_image_by_expression(
+                    driver, provider_info_dict['instance_type'],
+                    provider_info_dict['image_id'])
+                provider_info_dict['image_id'] = latest_image
+                new_cloud_server_data['image'] = latest_image
             if new_cloud_server_data.get('extra_param'):
                 provider_info_dict.update(
                     {'extra_param': json.loads(new_cloud_server_data.get('extra_param'))}
@@ -234,3 +241,19 @@ class AliCloudStep(AliGroupStep):
             timeout=config.PREPARE_TIMEOUT
         )
         return cls._update_step(meta_data, success, result)
+
+    @classmethod
+    def _get_latest_image_by_expression(cls, driver, instance_type, image_expression):
+        """
+        根据表达式 -> Anolis:Anolis OS  8.4 RHCK 64位:latest
+        获取最新镜像 -> anolisos_8_4_x64_20G_rhck_alibase_20220518.vhd
+        """
+        platform = image_expression.split(':')[0]
+        os_name = image_expression.split(':')[1]
+        latest_image = ''
+        images = driver.get_images(instance_type=instance_type)
+        for image in images:
+            if image['platform'] == platform and image['os_name'] == os_name:
+                latest_image = image['id']
+        logger.info(f'get latest image by expression:{image_expression}, result:{latest_image}')
+        return latest_image
