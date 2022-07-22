@@ -619,6 +619,7 @@ class CaseResultTone(Enum):
     Pass = 1
     Fail = 2
     Skip = 5
+    Warning = 6
 
 
 class PerfResultType:

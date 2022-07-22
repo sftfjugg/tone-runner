@@ -65,6 +65,8 @@ class FunctionTest(BaseTest):
             sub_case_result = CaseResultTone.Fail.value
         elif CaseResultTone.Pass.name in sub_case_results:
             sub_case_result = CaseResultTone.Pass.value
+        elif CaseResultTone.Warning.name in sub_case_results:
+            sub_case_result = CaseResultTone.Warning.value
         else:
             sub_case_result = CaseResultTone.Skip.value
         return sub_case_result
