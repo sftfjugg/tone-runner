@@ -79,6 +79,7 @@ class AliCloudStep(AliGroupStep):
                     provider_info_dict['image_id'])
                 provider_info_dict['image_id'] = latest_image
                 new_cloud_server_data['image'] = latest_image
+                new_cloud_server_data['image_name'] = latest_image
             if new_cloud_server_data.get('extra_param'):
                 provider_info_dict.update(
                     {'extra_param': json.loads(new_cloud_server_data.get('extra_param'))}
