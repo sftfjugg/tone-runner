@@ -11,6 +11,7 @@ from constant import (
     RunStrategy,
     UsingIdFlag
 )
+from models.server import CloudServer
 from tools.sn_ip_cache import get_sn_by_ip
 from .base_db_op import CommonDbServerOperation as Cs
 
@@ -206,6 +207,7 @@ class PoolCommonOperation:
             snapshot_server_id_dict[server_id] = snapshot_server_id
             cloud_inst_meta = cls.get_cloud_instance_meta_data(cloud_server)
             channel_type = cloud_server.channel_type or ChannelType.TONE_AGENT
+            cloud_server = CloudServer.get_by_id(server_id)
             servers.append(
                 {
                     ServerFlowFields.ROLE: cs.role,
@@ -218,6 +220,7 @@ class PoolCommonOperation:
                     ServerFlowFields.SERVER_IP: server_ip,
                     ServerFlowFields.PRIVATE_IP: private_ip,
                     ServerFlowFields.SERVER_SN: cloud_server.server_sn,
+                    ServerFlowFields.SERVER_TSN: cloud_server.server_tsn,
                     ServerFlowFields.CHANNEL_TYPE: channel_type,
                     ServerFlowFields.IN_POOL: cloud_server.in_pool,
                     ServerFlowFields.CLOUD_INST_META: cloud_inst_meta

@@ -40,7 +40,8 @@ class AliGroupStep(StepCommon):
             if server:
                 success, result = ExecChannel.do_exec(
                     channel_type,
-                    ip=server,
+                    ip=server.get('ip'),
+                    tsn=server.get('tsn'),
                     command=pub_cmd,
                     sync=True,
                     timeout=config.SSH_FREE_TIMEOUT
@@ -48,19 +49,21 @@ class AliGroupStep(StepCommon):
                 if success:
                     pub_key = result.get(agent_res.JOB_RESULT)
                     if pub_key:
-                        pub_keys[server] = pub_key.strip()
+                        pub_keys[server.get('ip')] = {'tsn': server.get('tsn'), 'keys': pub_key.strip()}
                     else:
                         raise RuntimeError(f"generate ssh pub key on {server} ! details: {result}")
                 else:
                     raise RuntimeError(f"generate ssh pub key failed on {server} ! details: {result}")
         for server in servers:
             if server:
-                for pub_key in pub_keys.values():
+                for pub_key_dict in pub_keys.values():
+                    pub_key = pub_key_dict.get('keys')
                     send_cmd = f'grep -q "{pub_key}" {auth_file} || echo "{pub_key}" >> {auth_file}'
                     logger.info(f"ssh free login, server: {server} cmd: {send_cmd}")
                     success, result = ExecChannel.do_exec(
                         channel_type,
-                        ip=server,
+                        ip=server.get('ip'),
+                        tsn=server.get('tsn'),
                         command=send_cmd,
                         sync=True,
                         timeout=config.SSH_FREE_TIMEOUT - 20

@@ -409,15 +409,22 @@ class StepCommon:
             server_ips = []
             channel_type = meta_data[ServerFlowFields.CHANNEL_TYPE]
             private_ip = meta_data[ServerFlowFields.PRIVATE_IP] or meta_data[ServerFlowFields.SERVER_IP]
+            server_tsn = meta_data[ServerFlowFields.SERVER_TSN]
+            if not server_tsn:
+                server_tsn = CloudServerSnapshot.get(id=meta_data[ServerFlowFields.SERVER_SNAPSHOT_ID]).server_tsn
             remote = meta_data.get(ClusterRole.REMOTE)
             if remote:
-                server_ips.append(private_ip)
+                server_ips.append({'ip': private_ip, 'tsn': server_tsn})
                 remote_ip_list = list()
                 for rm in remote:
                     ip = rm.get(ServerFlowFields.PRIVATE_IP) or rm.get(ServerFlowFields.SERVER_IP)
+                    tsn = rm.get(ServerFlowFields.SERVER_TSN)
+                    snapshot_server = CloudServerSnapshot.get(id=rm['server_snapshot_id'])
                     if not ip:
-                        ip = CloudServerSnapshot.get(id=rm['server_snapshot_id']).private_ip
-                    remote_ip_list.append(ip)
+                        ip = snapshot_server.private_ip
+                    if not tsn:
+                        tsn = snapshot_server.server_tsn
+                    remote_ip_list.append({'ip': ip, 'tsn': tsn})
                 server_ips.extend(remote_ip_list)
                 ssh_free_login_method(channel_type, *server_ips)
 
