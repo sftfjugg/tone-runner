@@ -490,18 +490,32 @@ class StepCommon:
 
     @classmethod
     def _get_job_func_test_result(cls, job_id):
-        success = fail = 0
-        job_cases = TestJobCase.select(TestJobCase.test_case_id).filter(job_id=job_id)
+        job_cases = TestJobCase.filter(job_id=job_id)
         test_case_ids = {job_case.test_case_id for job_case in job_cases}
         total = job_cases.count()
-        fail_job_case_count = job_cases.filter(state=ExecState.FAIL).count()
+        func_result_dict = {}
         for test_case_id in test_case_ids:
             conf_res = cls._calc_conf_result(job_id, test_case_id)
-            if conf_res == CaseResult.PASS.name:
-                success += 1
-            if conf_res == CaseResult.FAIL.name:
+            func_result_dict[test_case_id] = conf_res
+        fail, success = cls._merger_conf_run_state_and_test_state(func_result_dict, job_cases)
+        return {"total": total, "pass": success, "fail": fail}
+
+    @classmethod
+    def _merger_conf_run_state_and_test_state(cls, func_result_dict, job_cases):
+        """
+        统计conf成功/失败数量时，优先检查conf执行状态，再检查conf测试结果状态
+        """
+        success = fail = 0
+        for case in job_cases:
+            if case.state == ExecState.FAIL:
                 fail += 1
-        return {"total": total, "pass": success, "fail": fail + fail_job_case_count}
+            else:
+                conf_test_res = func_result_dict.get(case.test_case_id)
+                if conf_test_res == CaseResult.PASS.name:
+                    success += 1
+                if conf_test_res == CaseResult.FAIL.name:
+                    fail += 1
+        return fail, success
 
     @classmethod
     def _get_job_perf_test_result(cls, job_id):
