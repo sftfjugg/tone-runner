@@ -168,6 +168,9 @@ class RemoveAgentRequest(ToneAgentRequest):
     def set_ip(self, ip):
         self._request_data['ip'] = ip
 
+    def set_tsn(self, tsn):
+        self._request_data['tsn'] = tsn
+
     def send_request(self):
         return self.request(self._api, self._request_data)
 
@@ -267,9 +270,10 @@ class ToneAgentClient:
         self.add_request.set_description(description)
         return self.add_request.send_request()
 
-    def remove_agent(self, ip_list):
+    def remove_agent(self, ip_list, tsn_list):
         self.remove_request.set_ip(ip_list)
-        logger.info(f"remove server {ip_list}")
+        self.remove_request.set_tsn(tsn_list)
+        logger.info(f"remove server {ip_list} | {tsn_list}")
         return self.remove_request.send_request()
 
     def check_status(self, ip, sn=None, tsn=None):
@@ -441,7 +445,7 @@ def deploy_agent_by_ecs_assistant(
         mode=mode,
         arch=arch,
         version=version,
-        description='created by tone system'
+        description='created by tone-runner system'
     )
     logger.info(f"add agent api result:{add_agent_result}")
     if not add_agent_result.get("SUCCESS"):

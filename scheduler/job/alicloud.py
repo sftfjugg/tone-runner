@@ -194,7 +194,7 @@ class AliCloudStep(AliGroupStep):
                 provider_info.name.replace(".", "")
                 cloud_driver = get_cloud_driver(provider_info)
                 try:
-                    ToneAgentClient('remove').remove_agent(cloud_server.private_ip)
+                    ToneAgentClient('remove').remove_agent(cloud_server.private_ip, cloud_server.server_tsn)
                 except Exception as e:
                     error_msg = f"remove toneagent for {instance_id} has error: {str(e)}"
                     logger.error(error_msg)
