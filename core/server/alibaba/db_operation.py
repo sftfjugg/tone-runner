@@ -69,7 +69,15 @@ class AliGroupDbServerOperation(CommonDbServerOperation):
             ServerProvider.ALI_GROUP,
             RunMode.CLUSTER
         )
-        return TestCluster.select().filter(
+        return TestCluster.select().join(
+            TestCluster, on=(TestCluster.id == TestClusterServer.cluster_id)
+        ).join(
+            TestServer, on=(TestServer.id == TestClusterServer.server_id)
+        ).where(
+            TestCluster.ws_id == ws_id,
+            TestServer.state == ServerState.AVAILABLE,
+            TestCluster.is_deleted == DbField.FALSE,
+            TestServer.is_deleted == DbField.FALSE,
             TestCluster.id.not_in(tag_cluster_id_set),
             TestCluster.cluster_type == ServerProvider.ALI_GROUP,
             TestCluster.is_occpuied == DbField.FALSE,
@@ -225,9 +233,12 @@ class AliGroupDbServerOperation(CommonDbServerOperation):
                 ServerTagRelation, on=(TestServer.id == ServerTagRelation.object_id)
             ).where(
                 TestServer.ws_id == ws_id,
+                TestServer.is_deleted == DbField.FALSE,
+                TestServer.state == ServerState.AVAILABLE,
+                TestServer.spec_use == SpecUseType.NO_SPEC_USE,
+                TestServer.in_pool == DbField.TRUE,
                 ServerTagRelation.run_environment == ServerProvider.ALI_GROUP,
                 ServerTagRelation.object_type == RunMode.STANDALONE,
-                TestServer.state == ServerState.AVAILABLE,
                 ServerTagRelation.is_deleted == DbField.FALSE,
                 TestServer.occupied_job_id == DbField.NULL
             )
@@ -255,13 +266,14 @@ class AliGroupDbServerOperation(CommonDbServerOperation):
         return None
 
     @classmethod
-    def _get_spec_tag_server(cls, tag_id_list):
+    def _get_spec_tag_server(cls, tag_id_list, ws_id):
         server_li = list()
         for tag_id in tag_id_list:
             servers = TestServer.select(TestServer.id).join(
                 ServerTagRelation,
                 on=(TestServer.id == ServerTagRelation.object_id)
             ).where(
+                TestServer.ws_id == ws_id,
                 TestServer.is_deleted == DbField.FALSE,
                 TestServer.state == ServerState.AVAILABLE,
                 TestServer.spec_use == SpecUseType.NO_SPEC_USE,
@@ -280,9 +292,9 @@ class AliGroupDbServerOperation(CommonDbServerOperation):
             return TestServer.get_by_id(list(server_set)[0])
 
     @classmethod
-    def get_spec_tag_server(cls, job_id, tag_id_list):
+    def get_spec_tag_server(cls, job_id, tag_id_list, ws_id):
         while 1:
-            tag_server = cls._get_spec_tag_server(tag_id_list)
+            tag_server = cls._get_spec_tag_server(tag_id_list, ws_id)
             if tag_server:
                 is_using, _ = cls.check_server_is_using_by_cache(tag_server)
                 if is_using:
