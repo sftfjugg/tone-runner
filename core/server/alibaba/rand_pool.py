@@ -46,7 +46,6 @@ class AliGroupRandClusterPool(BaseServerPool, PoolCommonOperation):
 
 
 class AliCloudRandStdPool(BaseServerPool, PoolCommonOperation):
-    """云上机器资源获得相对容易，因此随机场景不再去其它机器池中争夺资源。"""
 
     @classmethod
     def pull(cls, default_info, **kwargs):
@@ -61,7 +60,6 @@ class AliCloudRandStdPool(BaseServerPool, PoolCommonOperation):
 
 
 class AliCloudRandClusterPool(BaseServerPool, PoolCommonOperation):
-    """云上机器资源获得相对容易，因此随机场景不再去其它机器池中争夺资源。"""
 
     @classmethod
     def pull(cls, default_info, **kwargs):
