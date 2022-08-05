@@ -146,8 +146,8 @@ BUILD_PKG_API_TOKEN = cp.get("build_pkg_api_token")
 
 # check machine real state
 CHECK_MACHINE_PROCESS_NUM = int(cp.get("check_machine_process_num", 90))
-CHECK_MACHINE_INTERVAL_START = int(cp.get("check_machine_interval_start", 180))
-CHECK_MACHINE_INTERVAL_END = int(cp.get("check_machine_interval_end", 300))
+CHECK_MACHINE_INTERVAL_START = int(cp.get("check_machine_interval_start", 120))
+CHECK_MACHINE_INTERVAL_END = int(cp.get("check_machine_interval_end", 180))
 CHECK_SERVER_STATE_ACQUIRE_TIMEOUT = int(cp.get("check_machine_state_acquire_timeout", 10))
 CHECK_SERVER_STATE_LOCK_TIMEOUT = int(cp.get("check_machine_state_lock_timeout", 10))
 CHECK_MACHINE_PROCESS_ACQUIRE_TIMEOUT = int(cp.get("check_machine_process_acquire_timeout", 10))
