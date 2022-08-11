@@ -235,7 +235,6 @@ class CheckJobStep:
                 if test_job_case:
                     test_case = TestCase.get_by_id(test_job_case.test_case_id)
                     test_suite = TestSuite.get_by_id(test_job_case.test_suite_id)
-                    case_name, suite_name = test_case.name, test_suite.name
                     result_folder = os.path.basename(os.path.dirname(log_file))
                     test_job = TestJob.get(id=job_id)
                     if test_job.server_provider == Provider.ALIGROUP:
@@ -246,14 +245,16 @@ class CheckJobStep:
                             ChannelType.TONE_AGENT,
                             ToneAgentScriptTone.UPLOAD_CLOUD, job_id=job_id
                         )
-                    arg = f"{suite_name} {case_name} {result_folder} {test_case.short_name} {config.OSS_PARENT_FOLDER}"
+                    arg = f"{config.TONE_PATH} {test_suite.name} {test_case.name} {result_folder} " \
+                          f"{test_case.short_name} {config.TONE_STORAGE_BUCKET}"
                     if channel_type == ChannelType.TONE_AGENT:
                         StepCommon.get_tone_agent_global_env(job_id, env_info)
+                    dag_step = DagStepInstance.get_by_id(step.dag_step_id)
                     success, result = ExecChannel.do_exec(
                         channel_type, ip=ip, command=script,
                         args=arg, env=env_info, sync=False,
                         timeout=config.UPLOAD_LOG_TIMEOUT,
-                        tsn=step.server_tsn
+                        tsn=dag_step.server_tsn
                     )
                     if success:
                         logger.info(f"upload log success, job: {job_id} step: {step_id},result: {result}")
