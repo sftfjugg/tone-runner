@@ -474,11 +474,7 @@ class AliCloudDbServerOperation(CommonDbServerOperation):
 
     @classmethod
     def _get_rand_server(cls, ws_id):
-        tag_server_id_set = cls._get_tag_object_id_set(
-            ServerProvider.ALI_CLOUD, RunMode.STANDALONE
-        )
         return CloudServer.select().filter(
-            CloudServer.id.not_in(tag_server_id_set),
             (CloudServer.state == ServerState.AVAILABLE) |
             (CloudServer.state.is_null()),
             CloudServer.spec_use == SpecUseType.NO_SPEC_USE,
@@ -504,11 +500,7 @@ class AliCloudDbServerOperation(CommonDbServerOperation):
 
     @classmethod
     def _get_rand_cluster(cls, ws_id):
-        tag_cluster_id_set = cls._get_tag_object_id_set(
-            ServerProvider.ALI_CLOUD, RunMode.CLUSTER
-        )
         return TestCluster.select().filter(
-            TestCluster.id.not_in(tag_cluster_id_set),
             TestCluster.cluster_type == ServerProvider.ALI_CLOUD,
             TestCluster.is_occpuied == DbField.FALSE,
             TestCluster.ws_id == ws_id,
