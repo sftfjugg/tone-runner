@@ -277,7 +277,7 @@ class ToneAgentClient:
         return self.remove_request.send_request()
 
     def check_status(self, ip, sn=None, tsn=None):
-        result = self.do_exec(ip=ip, command="uptime", sync="true", timeout=10, sn=sn, tsn=tsn)
+        result = self.do_exec(ip=ip, command="uptime", sync="true", timeout=60, sn=sn, tsn=tsn)
         logger.info(f"{ip} check server status result is: {result}")
         if result["SUCCESS"]:
             result = result["RESULT"]
