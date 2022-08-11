@@ -227,7 +227,7 @@ class ToneAgentClient:
             self.add_request = AddAgentRequest(self.access_key, self.secret_key)
 
     def do_exec(self, ip=None, command=None, args="", script_type="shell",
-                env=None, cwd=None, sync="false", timeout=60, sn=None, tsn=None):
+                env=None, cwd=None, sync="false", timeout=100, sn=None, tsn=None):
         if ip:
             self.exec_request.set_ip(ip)
         if tsn:
@@ -277,7 +277,7 @@ class ToneAgentClient:
         return self.remove_request.send_request()
 
     def check_status(self, ip, sn=None, tsn=None):
-        result = self.do_exec(ip=ip, command="uptime", sync="true", timeout=60, sn=sn, tsn=tsn)
+        result = self.do_exec(ip=ip, command="uptime", sync="true", timeout=100, sn=sn, tsn=tsn)
         logger.info(f"{ip} check server status result is: {result}")
         if result["SUCCESS"]:
             result = result["RESULT"]
@@ -290,7 +290,7 @@ class ToneAgentClient:
             return False
 
     def check_reboot(self, ip, reboot_time, sn=None):
-        result = self.do_exec(ip=ip, command="cat /proc/uptime", sync="true", timeout=5, sn=sn)
+        result = self.do_exec(ip=ip, command="cat /proc/uptime", sync="true", timeout=100, sn=sn)
         logger.info(f"{ip} check server reboot {result}, channel_type:tone-agent")
         if result["SUCCESS"]:
             result = result["RESULT"]
@@ -512,7 +512,7 @@ def _check_server_os_type(ip, sn=None):
         ip=ip,
         command="cat /etc/os-release | grep -i id=",
         sync="true",
-        timeout=10,
+        timeout=100,
         sn=sn
     )
     logger.info(f"{ip} check server os type {result}, channel_type:tone-agent")
