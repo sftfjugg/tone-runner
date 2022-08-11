@@ -43,7 +43,7 @@ result_logger = LoggerFactory.scheduler()
 class StepCommon:
 
     @classmethod
-    def _exec_spec_script(cls, meta_data, script_flag, args="", timeout=60, sync=False, run_case_step=False):
+    def _exec_spec_script(cls, meta_data, script_flag, args="", timeout=100, sync=False, run_case_step=False):
         job_id = meta_data[ServerFlowFields.JOB_ID]
         provider = meta_data[ServerFlowFields.SERVER_PROVIDER]
         run_mode = meta_data[ServerFlowFields.RUN_MODE]
@@ -86,7 +86,7 @@ class StepCommon:
         return success, result
 
     @classmethod
-    def exec_custom_script(cls, meta_data, sync=False, timeout=60):
+    def exec_custom_script(cls, meta_data, sync=False, timeout=100):
         job_id = meta_data[ServerFlowFields.JOB_ID]
         channel_type = meta_data[ServerFlowFields.CHANNEL_TYPE]
         ip = meta_data[ServerFlowFields.SERVER_IP]
