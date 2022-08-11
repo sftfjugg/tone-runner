@@ -12,7 +12,7 @@ class AliGroupTagStdPool(BaseServerPool, PoolCommonOperation):
         ws_id = default_info[ServerFlowFields.WS_ID]
         job_id = default_info[ServerFlowFields.JOB_ID]
         tag_id_list = kwargs.get(ServerFlowFields.TAG_ID_LIST, [])
-        tag_server = AliGroupDbServerOperation.get_spec_tag_server(job_id, tag_id_list)
+        tag_server = AliGroupDbServerOperation.get_spec_tag_server(job_id, tag_id_list, ws_id)
         cls._pull_std_server_in_pool(ws_id, job_id, tag_server, default_info)
         if not default_info.get(ServerFlowFields.READY):
             job_state_desc = "当前机器池中无指定标签的可用机器，" \
