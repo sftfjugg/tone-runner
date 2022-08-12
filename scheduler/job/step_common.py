@@ -413,7 +413,7 @@ class StepCommon:
             if server_provider == ServerProvider.ALI_GROUP:
                 private_ip = meta_data[ServerFlowFields.SERVER_IP]
                 if not server_tsn:
-                    server_tsn = TestServerSnapshot.get(id=meta_data[ServerFlowFields.SERVER_SNAPSHOT_ID]).server_tsn
+                    server_tsn = TestServerSnapshot.get(id=meta_data[ServerFlowFields.SERVER_SNAPSHOT_ID]).tsn
             else:
                 private_ip = meta_data[ServerFlowFields.PRIVATE_IP] or meta_data[ServerFlowFields.SERVER_IP]
                 if not server_tsn:
@@ -430,7 +430,7 @@ class StepCommon:
                         if not ip:
                             ip = snapshot_server.ip
                         if not tsn:
-                            tsn = snapshot_server.server_tsn
+                            tsn = snapshot_server.tsn
                     else:
                         snapshot_server = CloudServerSnapshot.get(id=rm['server_snapshot_id'])
                         if not ip:
