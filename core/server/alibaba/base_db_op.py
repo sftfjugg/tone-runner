@@ -165,7 +165,7 @@ class CommonDbServerOperation:
         return None
 
     @classmethod
-    def _get_spec_tag_cluster(cls, tag_id_list, server_provider):
+    def _get_spec_tag_cluster(cls, tag_id_list, server_provider, ws_id):
         cluster_li = list()
         for tag_id in tag_id_list:
             clusters = TestCluster.select(
@@ -173,6 +173,7 @@ class CommonDbServerOperation:
             ).join(
                 ServerTagRelation, on=(TestCluster.id == ServerTagRelation.object_id)
             ).where(
+                TestCluster.ws_id == ws_id,
                 TestCluster.is_deleted == DbField.FALSE,
                 TestCluster.is_occpuied == DbField.FALSE,
                 ServerTagRelation.run_environment == server_provider,

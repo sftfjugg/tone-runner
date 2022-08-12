@@ -269,7 +269,7 @@ class AliGroupDbServerOperation(CommonDbServerOperation):
     def _get_spec_tag_server(cls, tag_id_list, ws_id):
         server_li = list()
         for tag_id in tag_id_list:
-            servers = TestServer.select(TestServer.id).join(
+            servers = TestServer.select().join(
                 ServerTagRelation,
                 on=(TestServer.id == ServerTagRelation.object_id)
             ).where(
@@ -284,12 +284,13 @@ class AliGroupDbServerOperation(CommonDbServerOperation):
                 ServerTagRelation.is_deleted == DbField.FALSE,
                 TestServer.occupied_job_id == DbField.NULL
             ).order_by(fn.Rand())
-            server_li.append([server.id for server in servers])
-        server_set = set(server_li[0])
-        for _server in server_li[1:]:
-            server_set &= set(_server)
-        if server_set:
-            return TestServer.get_by_id(list(server_set)[0])
+            for server in servers:
+                is_using, _ = cls.check_server_is_using_by_cache(server)
+                if not is_using:
+                    server_li.append(server)
+        if len(server_li) > 0:
+            return server_li[0]
+        return None
 
     @classmethod
     def get_spec_tag_server(cls, job_id, tag_id_list, ws_id):
@@ -361,7 +362,7 @@ class AliGroupDbServerOperation(CommonDbServerOperation):
     @classmethod
     def get_spec_tag_cluster(cls, ws_id, job_id, tag_id_list):
         while 1:
-            tag_cluster = cls._get_spec_tag_cluster(tag_id_list, ServerProvider.ALI_GROUP)
+            tag_cluster = cls._get_spec_tag_cluster(tag_id_list, ServerProvider.ALI_GROUP, ws_id)
             if tag_cluster:
                 cluster_id = tag_cluster.id
                 has_no_available = cls._clu_has_no_available_server(ws_id, cluster_id)
@@ -654,14 +655,14 @@ class AliCloudDbServerOperation(CommonDbServerOperation):
                 return None
 
     @classmethod
-    def get_spec_tag_cluster(cls, job_id, tag_id_list):
+    def get_spec_tag_cluster(cls, job_id, tag_id_list, ws_id):
         while 1:
-            tag_cluster = cls._get_spec_tag_cluster(tag_id_list, ServerProvider.ALI_CLOUD)
+            tag_cluster = cls._get_spec_tag_cluster(tag_id_list, ServerProvider.ALI_CLOUD, ws_id)
             if tag_cluster:
                 cluster_id = tag_cluster.id
                 cluster_server = cls.get_cluster_server(cluster_id, ServerProvider.ALI_CLOUD)
                 if cluster_server:
-                    is_using, _ = cls.check_cluster_server_using_by_cache(cluster_server)
+                    is_using, _ = cls.check_cluster_server_using_by_cache(cluster_server, ServerProvider.ALI_CLOUD)
                     if is_using:
                         return None
                     if cls._check_cluster_server_broken(job_id, cluster_server):
