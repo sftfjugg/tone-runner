@@ -562,18 +562,18 @@ class JobComplete:
         else:
             snapshot_model = CloudServerSnapshot
         kernel_version_count = snapshot_model.filter(
-            job_id=self.job_id).group_by(
+            snapshot_model.job_id == self.job_id, snapshot_model.kernel_version.is_null(is_null=False)).group_by(
             snapshot_model.kernel_version
         )
         product_version_count = snapshot_model.filter(
-            job_id=self.job_id).group_by(
+            snapshot_model.job_id == self.job_id, snapshot_model.product_version.is_null(is_null=False)).group_by(
             snapshot_model.product_version
         )
         if not self.job.show_kernel_version and len(kernel_version_count) == 1:
-            kernel_version = snapshot_model.filter(job_id=self.job_id).first().kernel_version
+            kernel_version = kernel_version_count.first().kernel_version
             self.job.show_kernel_version = kernel_version
         if not self.job.product_version and len(product_version_count) == 1:
-            product_version = snapshot_model.filter(job_id=self.job_id).first().product_version
+            product_version = product_version_count.first().product_version
             self.job.product_version = product_version
         self.job.save()
 
