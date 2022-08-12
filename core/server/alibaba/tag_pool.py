@@ -56,9 +56,10 @@ class AliCloudTagClusterPool(BaseServerPool, PoolCommonOperation):
     @classmethod
     def pull(cls, default_info, **kwargs):
         job_state_desc = None
+        ws_id = default_info[ServerFlowFields.WS_ID]
         job_id = default_info[ServerFlowFields.JOB_ID]
         tag_id_list = kwargs.get(ServerFlowFields.TAG_ID_LIST, [])
-        tag_cluster = AliCloudDbServerOperation.get_spec_tag_cluster(job_id, tag_id_list)
+        tag_cluster = AliCloudDbServerOperation.get_spec_tag_cluster(job_id, tag_id_list, ws_id)
         cls._pull_cloud_cluster_server(job_id, tag_cluster, default_info)
         if not default_info.get(ServerFlowFields.READY):
             job_state_desc = "当前机器池中无指定标签的可用集群，" \
