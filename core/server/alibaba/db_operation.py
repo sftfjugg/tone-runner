@@ -284,13 +284,19 @@ class AliGroupDbServerOperation(CommonDbServerOperation):
                 ServerTagRelation.is_deleted == DbField.FALSE,
                 TestServer.occupied_job_id == DbField.NULL
             ).order_by(fn.Rand())
-            for server in servers:
-                is_using, _ = cls.check_server_is_using_by_cache(server)
-                if not is_using:
-                    server_li.append(server)
-        if len(server_li) > 0:
-            return server_li[0]
-        return None
+            server_li.append([server for server in servers if not cls.check_server_is_using_by_cache(server)[0]])
+        server_set = set([server.id for server in server_li[0]])
+        for _server in server_li[1:]:
+            server_set &= set([server.id for server in _server])
+        if server_set:
+            return cls.__get_server_for_id(list(server_set)[0], server_li)
+
+    @classmethod
+    def __get_server_for_id(cls, server_id, server_li):
+        for _server in server_li:
+            for server in _server:
+                if server_id == server.id:
+                    return server
 
     @classmethod
     def get_spec_tag_server(cls, job_id, tag_id_list, ws_id):
