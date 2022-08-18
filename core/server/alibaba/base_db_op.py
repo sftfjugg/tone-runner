@@ -132,7 +132,7 @@ class CommonDbServerOperation:
     @classmethod
     def get_servers_by_cluster(cls, cluster_id, server_provider):
         servers = []
-        cluster_servers = cls.get_cluster_server(cluster_id, server_provider)
+        cluster_servers = cls.get_cluster_server(cluster_id, server_provider, is_run=True)
         if server_provider == ServerProvider.ALI_GROUP:
             for cs in cluster_servers:
                 servers.append(cs.testserver)
@@ -162,7 +162,7 @@ class CommonDbServerOperation:
         roles = {cs.role for cs in cluster_server}
         if ClusterRole.LOCAL in roles and ClusterRole.REMOTE in roles:
             return cluster_server
-        return None
+        return []
 
     @classmethod
     def _get_spec_tag_cluster(cls, tag_id_list, server_provider, ws_id):
