@@ -519,7 +519,12 @@ def _check_server_os_type(ip, sn=None):
     if not result["SUCCESS"]:
         return
     if result["RESULT"]["TASK_STATUS"] == "success":
-        os_type_str = result["RESULT"]["TASK_RESULT"].lower()
+        os_type_str = result["RESULT"]["TASK_RESULT"]
+        if os_type_str:
+            os_type_str = os_type_str.lower()
+        else:
+            logger.warning(f"{ip} check server os type no result: {result}")
+            return "linux"
         for item in debian_os_criterion:
             if item in os_type_str:
                 return "debian"
