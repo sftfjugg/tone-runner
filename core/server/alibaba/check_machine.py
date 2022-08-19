@@ -36,7 +36,7 @@ class RealStateCorrection:
     def get_new_check_servers_from_db(self):
         test_server_list = TestServer.filter(
             (TestServer.state == ServerState.BROKEN) | (TestServer.real_state == ServerState.BROKEN),
-            TestServer.id > self.last_test_server_id
+            # TestServer.id > self.last_test_server_id
         ).limit(self.BATCH_PROCESS_NUM)
         if test_server_list:
             self.test_server_list = list(test_server_list)
