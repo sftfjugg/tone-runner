@@ -217,35 +217,43 @@ class EcsDriver(LibCloudECSDriver, RpcRequest):
                 'disk_name': 'data_disk_%s' % i,
                 'delete_with_instance': True}
             data_disks.append(data_disk)
-        try:
-            auth = NodeAuthPassword(login_password)
-            node = self.create_node(
-                name=name, image=image, size=size,
-                ex_security_group_id=ex_security_group_id,
-                ex_vswitch_id=ex_vswitch_id,
-                ex_internet_charge_type=ex_internet_charge_type,
-                ex_internet_max_bandwidth_out=ex_internet_max_bandwidth_out,
-                ex_internet_max_bandwidth_in=ex_internet_max_bandwidth_in,
-                ex_system_disk=system_disk,
-                ex_data_disks=data_disks,
-                auth=auth,
-                ddh_id=ddh_id,
-                ddh_type=ddh_type,
-                extra_param=extra_param,
-                resource_group_id=self.resource_group_id,
-                **kwargs)
-            pub_ip = self.create_public_ip(node.id)
-            is_up = wait_until_socket_up(pub_ip, 22, timeout=300, interval=0.5)
-            if is_up:
-                logger.info('ecs %s (ip:%s name: %s) is reachable ...' % (node.id, pub_ip, name))
-            else:
-                raise RuntimeError('ecs %s (ip:%s name: %s) is not up in 300s!' % (
-                    node.id, pub_ip, name))
-            return node.id
-        except BaseHTTPError as e:
-            logger.error('create ecs node failed, BaseHTTPError error: %s' % str(e))
-            time.sleep(1.234)
-            raise AliYunException(msg=e.message, code=e.code)
+        node_id = None
+        retry_num = 3
+        for i in range(1, 1 + retry_num):
+            try:
+                logger.info('create ecs node for the %sth time' % i)
+                auth = NodeAuthPassword(login_password)
+                node = self.create_node(
+                    name=name, image=image, size=size,
+                    ex_security_group_id=ex_security_group_id,
+                    ex_vswitch_id=ex_vswitch_id,
+                    ex_internet_charge_type=ex_internet_charge_type,
+                    ex_internet_max_bandwidth_out=ex_internet_max_bandwidth_out,
+                    ex_internet_max_bandwidth_in=ex_internet_max_bandwidth_in,
+                    ex_system_disk=system_disk,
+                    ex_data_disks=data_disks,
+                    auth=auth,
+                    ddh_id=ddh_id,
+                    ddh_type=ddh_type,
+                    extra_param=extra_param,
+                    resource_group_id=self.resource_group_id,
+                    **kwargs)
+                pub_ip = self.create_public_ip(node.id)
+                is_up = wait_until_socket_up(pub_ip, 22, timeout=300, interval=0.5)
+                if is_up:
+                    logger.info('ecs %s (ip:%s name: %s) is reachable ...' % (node.id, pub_ip, name))
+                else:
+                    raise RuntimeError('ecs %s (ip:%s name: %s) is not up in 300s!' % (
+                        node.id, pub_ip, name))
+                node_id = node.id
+                break
+            except BaseHTTPError as e:
+                logger.error('create ecs node failed, BaseHTTPError error: %s' % str(e))
+                if 'Throttling' in str(e.message) and i < retry_num:
+                    time.sleep(1)
+                    continue
+                raise AliYunException(msg=e.message, code=e.code)
+        return node_id
 
     def create_node(self, name, size, image, auth=None,
                     ex_security_group_id=None, ex_description=None,
@@ -302,7 +310,17 @@ class EcsDriver(LibCloudECSDriver, RpcRequest):
                 raise error
             except LibcloudError as error:
                 raise error
-        self._wait_until_state([node], NodeState.RUNNING, 1, 300)
+        retry_num = 3
+        for i in range(1, 1 + retry_num):
+            try:
+                logger.info('start node for the %sth time' % i)
+                self._wait_until_state([node], NodeState.RUNNING, 1, 300)
+                break
+            except LibcloudError as error:
+                if 'Timed out after' in str(error) and i < retry_num:
+                    time.sleep(1)
+                    continue
+                raise error
 
     def update_params(self, params, ex_security_group_id,
                       ex_description, ex_internet_charge_type,
