@@ -17,11 +17,16 @@ logger = LoggerFactory.scheduler()
 
 class ProcessDagNodePlugin:
     EXEC_CMD_WITH_CASE_DONE = {
-        "gcc": "gcc -v",
+        "gcc": "gcc --version",
         "arch": "uname -p",
-        "rpm_list": "rpm -qa",
+        "rpm_list": "rpm -q glibc",
         "distro": "cat /etc/os-release | grep -i id=",
-        "kernel_version": "uname -r"
+        "kernel_version": "uname -r",
+        "glibc": "ldd --version",
+        "memory_info": "cat /proc/meminfo",
+        "disk": "df -h",
+        "cpu_info": "cat /proc/cpuinfo",
+        "ether": "ifconfig"
     }
 
     @classmethod
