@@ -162,7 +162,7 @@ KAFKA_FETCH_MAX_BYTES = int(cp.get("kafka_fetch_max_bytes", 1 * 1024 * 1024))
 KAFKA_SESSION_TIMEOUT_MS = int(cp.get("kafka_session_timeout_ms", 25000))
 
 # tone home
-TONE_DOMAIN = cp.get("tone_domain")
+TONE_DOMAIN = cp.get("tone_outside_domain")
 
 # other
 TRACE_LIMIT = int(cp.get("trace_limit", 20))
