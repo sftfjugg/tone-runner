@@ -157,7 +157,6 @@ class CommonDbServerOperation:
             TestClusterServer.is_deleted == DbField.FALSE,
             server_model.is_deleted == DbField.FALSE,
             server_model.state.in_(alloc_server),
-            server_model.real_state.in_(alloc_server),
         )
         roles = {cs.role for cs in cluster_server}
         if ClusterRole.LOCAL in roles and ClusterRole.REMOTE in roles:
