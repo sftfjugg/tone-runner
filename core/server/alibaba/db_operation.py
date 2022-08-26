@@ -74,7 +74,6 @@ class AliGroupDbServerOperation(CommonDbServerOperation):
         ).join(
             TestServer, on=(TestServer.id == TestClusterServer.server_id)
         ).where(
-            TestCluster.ws_id == ws_id,
             TestServer.state == ServerState.AVAILABLE,
             TestCluster.is_deleted == DbField.FALSE,
             TestServer.is_deleted == DbField.FALSE,
