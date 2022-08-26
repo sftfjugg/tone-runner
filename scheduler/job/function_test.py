@@ -49,14 +49,21 @@ class FunctionTest(BaseTest):
                         )
                         parsed = True
                         if statistic_data["status"] == 'fail':
-                            step.state = ExecState.FAIL
-                            step.save()
+                            cls._set_step_state_fail(step)
+                    else:
+                        cls._set_step_state_fail(step)
             except Exception as error:
+                cls._set_step_state_fail(step)
                 logger.error('save_result error, detail:{}'.format(str(error)),)
                 logger.exception(
                     f"save test data has exception, job_id:{job_id}, step_id:{step_id}:"
                 )
                 raise CheckStepException(error)
+
+    @classmethod
+    def _set_step_state_fail(cls, step):
+        step.state = ExecState.FAIL
+        step.save()
 
     @classmethod
     def get_sub_result_from_matrix(cls, sub_case_results):
