@@ -65,12 +65,19 @@ class PerformanceTest(BaseTest):
             if response.ok:
                 data = json.loads(response.text)
                 if data["status"] == 'fail':
-                    step.state = ExecState.FAIL
-                    step.save()
+                    cls._set_step_state_fail(step)
                 cls._save_data_to_db(job_id, step_id, dag_step_id, test_suite_id, test_case_id, data, repeat)
+            else:
+                cls._set_step_state_fail(step)
         except Exception as error:
+            cls._set_step_state_fail(step)
             error = str(error)
             logger.error(f"job: {job_id} step: {step_id} save_perf_data calc avg.json error: {error} !!!")
+
+    @classmethod
+    def _set_step_state_fail(cls, step):
+        step.state = ExecState.FAIL
+        step.save()
 
     @classmethod
     def _save_data_to_db(cls, job_id, step_id, dag_step_id, test_suite_id, test_case_id, data, repeat):
