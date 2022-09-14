@@ -165,7 +165,7 @@ class CheckJobStep:
                 if stage in StepStage.REBOOT_SET:
                     reboot_time = int(test_step.gmt_created.timestamp())
                     dag_step.reboot_time = reboot_time
-                    cls._check_reboot(test_step, channel_type, dag_step.server_ip, reboot_time)
+                    cls._check_reboot(test_step, channel_type, dag_step.server_ip, reboot_time, tsn=server_tsn)
                 else:
                     result_ = None
                     test_step.state = ExecState.SUCCESS
@@ -186,13 +186,14 @@ class CheckJobStep:
         return is_end, error_msg
 
     @classmethod
-    def _check_reboot(cls, test_step, channel_type, server_ip, reboot_time):
+    def _check_reboot(cls, test_step, channel_type, server_ip, reboot_time, tsn=None):
         try:
             check_success = ExecChannel.check_reboot(
                 channel_type, server_ip,
                 max_retries=config.CHECK_REBOOT_RETRIES,
                 interval=config.CHECK_REBOOT_INTERVAL,
                 reboot_time=reboot_time,
+                tsn=tsn
             )
         except ExecChanelException:
             check_success = False

@@ -289,9 +289,9 @@ class ToneAgentClient:
         else:
             return False
 
-    def check_reboot(self, ip, reboot_time, sn=None):
-        result = self.do_exec(ip=ip, command="cat /proc/uptime", sync="true", timeout=100, sn=sn)
-        logger.info(f"{ip} check server reboot {result}, channel_type:tone-agent")
+    def check_reboot(self, ip, reboot_time, sn=None, tsn=None):
+        result = self.do_exec(ip=ip, command="cat /proc/uptime", sync="true", timeout=100, sn=sn, tsn=tsn)
+        logger.info(f"{ip} {tsn} check server reboot {result}, channel_type:tone-agent")
         if result["SUCCESS"]:
             result = result["RESULT"]
             if result["TASK_STATUS"] == "success":
@@ -477,11 +477,11 @@ def check_server_status(ip, sn=None, max_retries=5, interval=1, tsn=None):
     return check_res, error_msg
 
 
-def check_reboot(ip=None, sn=None, reboot_time=None,  max_retries=5, interval=3):
+def check_reboot(ip=None, sn=None, tsn=None, reboot_time=None,  max_retries=5, interval=3):
     check_cnt, check_res = 0, False
     while check_cnt < max_retries:
         try:
-            check_res = ToneAgentClient().check_reboot(ip, reboot_time, sn)
+            check_res = ToneAgentClient().check_reboot(ip, reboot_time, sn, tsn=tsn)
         except Exception as error:
             error_msg = str(error)
             logger.exception(f"Tone-agent request has error {error_msg}, traceback:")
