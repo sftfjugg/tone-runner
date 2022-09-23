@@ -167,7 +167,12 @@ def check_timeout_for_now(start_tm, exp_timeout):
 
 def get_kernel_version(kernel):
     if kernel.find("kernel-debug") > -1:
-        if kernel.find(".ali5000.") > -1:
+        anolis = re.compile(r"\.an[0-9]{1}\.")
+        if re.search(anolis, kernel):
             return kernel.rsplit("/", 1)[-1][len("kernel-debug-"):][:-len(".rpm")] + "+debug"
-        return kernel.rsplit("/", 1)[-1][len("kernel-debug-"):][:-len(".rpm")] + ".debug"
+        else:
+            if kernel.find("4.19") > -1:
+                return kernel.rsplit("/", 1)[-1][len("kernel-debug-"):][:-len(".rpm")] + ".debug"
+            if kernel.find("5.10") > -1:
+                return kernel.rsplit("/", 1)[-1][len("kernel-debug-"):][:-len(".rpm")] + "+debug"
     return kernel.rsplit("/", 1)[-1][len("kernel-"):][:-len(".rpm")]
