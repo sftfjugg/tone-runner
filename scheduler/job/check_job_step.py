@@ -6,6 +6,7 @@ import config
 from core.exception import CheckStepException, ExecChanelException
 from core.exec_channel import ExecChannel
 from core.op_acc_msg import OperationAccompanyMsg as Oam
+from core.server.alibaba.base_db_op import CommonDbServerOperation as Cs
 from lib.cloud import Provider
 from scheduler.job.step_common import StepCommon
 from constant import (
@@ -161,6 +162,8 @@ class CheckJobStep:
         if agent_res_status.check_end(status):
             is_end = True
             result = job_result[:config.EXEC_RESULT_LIMIT] or error_msg
+            if not server_tsn:
+                server_tsn = Cs.get_server_tsn(server_id, server_provider)
             if agent_res.check_success(success):
                 if stage in StepStage.REBOOT_SET:
                     reboot_time = int(test_step.gmt_created.timestamp())
@@ -250,11 +253,14 @@ class CheckJobStep:
                     if channel_type == ChannelType.TONE_AGENT:
                         StepCommon.get_tone_agent_global_env(job_id, env_info)
                     dag_step = DagStepInstance.get_by_id(step.dag_step_id)
+                    tsn = dag_step.server_tsn
+                    if not tsn:
+                        tsn = Cs.get_server_tsn(dag_step.server_id, dag_step.server_provider)
                     success, result = ExecChannel.do_exec(
                         channel_type, ip=ip, command=script,
                         args=arg, env=env_info, sync=False,
                         timeout=config.UPLOAD_LOG_TIMEOUT,
-                        tsn=dag_step.server_tsn
+                        tsn=tsn
                     )
                     if success:
                         logger.info(f"upload log success, job: {job_id} step: {step_id},result: {result}")

@@ -105,6 +105,18 @@ class CommonDbServerOperation:
             return CloudServerSnapshot.get_by_id(server_id)
 
     @classmethod
+    def get_server_tsn(cls, server_id, provider):
+        tsn = ""
+        try:
+            if server_id and provider:
+                server = cls.get_server_by_provider(server_id, provider)
+                if server:
+                    tsn = server.tsn
+        except Exception as e:
+            logger.error(f'get server tsn exception: {str(e)}')
+        return tsn
+
+    @classmethod
     def get_snapshot_server_id_by_provider(cls, job_id, source_server_id, provider):
         if provider == ServerProvider.ALI_GROUP:
             return TestServerSnapshot.get(

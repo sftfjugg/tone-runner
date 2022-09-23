@@ -72,6 +72,9 @@ class StepCommon:
             )
             if provider == ServerProvider.ALI_CLOUD:
                 ip = meta_data.get(ServerFlowFields.PRIVATE_IP) or ip
+            if not tsn:
+                server_id = meta_data[ServerFlowFields.SERVER_ID]
+                tsn = Cs.get_server_tsn(server_id, provider)
         success, result = ExecChannel.do_exec(
             channel_type,
             ip=ip,
@@ -90,6 +93,7 @@ class StepCommon:
         job_id = meta_data[ServerFlowFields.JOB_ID]
         channel_type = meta_data[ServerFlowFields.CHANNEL_TYPE]
         ip = meta_data[ServerFlowFields.SERVER_IP]
+        tsn = meta_data[ServerFlowFields.SERVER_TSN]
         sn = meta_data.get(ServerFlowFields.SERVER_SN)
         script = meta_data[JobCfgFields.SCRIPT]
         env_info = meta_data.get(JobCfgFields.ENV_INFO, dict())
@@ -99,6 +103,9 @@ class StepCommon:
             provider = meta_data[ServerFlowFields.SERVER_PROVIDER]
             if provider == ServerProvider.ALI_CLOUD:
                 ip = meta_data.get(ServerFlowFields.PRIVATE_IP) or meta_data.get(ServerFlowFields.SERVER_IP)
+            if not tsn:
+                server_id = meta_data[ServerFlowFields.SERVER_ID]
+                tsn = Cs.get_server_tsn(server_id, provider)
         success, result = ExecChannel.do_exec(
             channel_type,
             ip=ip,
@@ -106,7 +113,8 @@ class StepCommon:
             command=script,
             env=env_info,
             sync=sync,
-            timeout=timeout
+            timeout=timeout,
+            tsn=tsn
         )
         return success, result
 
@@ -410,14 +418,13 @@ class StepCommon:
             channel_type = meta_data[ServerFlowFields.CHANNEL_TYPE]
             server_provider = meta_data[ServerFlowFields.SERVER_PROVIDER]
             server_tsn = meta_data[ServerFlowFields.SERVER_TSN]
+            if not server_tsn:
+                server_id = meta_data[ServerFlowFields.SERVER_ID]
+                server_tsn = Cs.get_server_tsn(server_id, server_provider)
             if server_provider == ServerProvider.ALI_GROUP:
                 private_ip = meta_data[ServerFlowFields.SERVER_IP]
-                if not server_tsn:
-                    server_tsn = TestServerSnapshot.get(id=meta_data[ServerFlowFields.SERVER_SNAPSHOT_ID]).tsn
             else:
                 private_ip = meta_data[ServerFlowFields.PRIVATE_IP] or meta_data[ServerFlowFields.SERVER_IP]
-                if not server_tsn:
-                    server_tsn = CloudServerSnapshot.get(id=meta_data[ServerFlowFields.SERVER_SNAPSHOT_ID]).server_tsn
             remote = meta_data.get(ClusterRole.REMOTE)
             if remote:
                 server_ips.append({'ip': private_ip, 'tsn': server_tsn})
