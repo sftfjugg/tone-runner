@@ -540,7 +540,7 @@ class JobComplete:
             server_model = TestServer
         else:
             server_model = CloudServer
-        CloudServer.update(state=ServerState.AVAILABLE, occupied_job_id=None).where(
+        server_model.update(state=ServerState.AVAILABLE, occupied_job_id=None).where(
             (server_model.state == ServerState.OCCUPIED) &
             ((server_model.occupied_job_id == self.job_id) |
              (server_model.occupied_job_id.is_null(is_null=True)) |
