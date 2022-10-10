@@ -3,7 +3,6 @@ from core.exec_channel import ExecChannel
 from core.server.alibaba.base_db_op import CommonDbServerOperation as Cs
 from core.dag.plugin import db_operation
 from core.dag.plugin.job_complete import JobComplete
-from models.server import CloudServerSnapshot, TestServerSnapshot
 from models.workspace import Product, Project
 from scheduler.job.check_job_step import CheckJobStep
 from constant import TidTypeFlag, ExecState, StepStage, ServerFlowFields, get_agent_res_obj, ServerProvider
@@ -117,10 +116,8 @@ class ProcessDagNodePlugin:
         channel_type = dag_step.channel_type
         server_provider = dag_step.server_provider
         snapshot_server_id = dag_step.snapshot_server_id
-        if dag_step.server_provider == ServerProvider.ALI_GROUP:
-            server_tsn = TestServerSnapshot.get_by_id(snapshot_server_id).tsn
-        else:
-            server_tsn = CloudServerSnapshot.get_by_id(snapshot_server_id).server_tsn
+        server_id = dag_step.server_id
+        server_tsn = Cs.get_server_tsn(server_id, server_provider)
         agent_res = get_agent_res_obj(channel_type)
         cls._replenish_cmd_info(dag_step)
         default_product_version = cls._get_project_default_version(dag_step)
