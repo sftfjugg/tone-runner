@@ -5,7 +5,6 @@ import config
 from core.exec_channel import ExecChannel
 from core.distr_lock import DistributedLock
 from core.exception import ExecChanelException
-from core.cache.remote_source import RemoteCronCheckServerSource as Rc
 from constant import ServerProvider, ServerState, ProcessDataSource, BaseConfigKey
 from models.server import TestServer, CloudServer, get_server_model_by_provider, ServerRecoverRecord, \
     update_server_state_log
@@ -27,55 +26,23 @@ class RealStateCorrection:
         self.lock_name = lock_name
         self.acquire_timeout = acquire_timeout
         self.lock_timeout = lock_timeout
-        self.last_test_server_id = 0
-        self.last_cloud_server_id = 0
         self.test_server_list = []
         self.cloud_server_list = []
-        self.process_flag = "_with_real_state"
 
     def get_new_check_servers_from_db(self):
         test_server_list = TestServer.filter(
-            (TestServer.state == ServerState.BROKEN) | (TestServer.real_state == ServerState.BROKEN),
-            # TestServer.id > self.last_test_server_id
-        ).limit(self.BATCH_PROCESS_NUM)
+            (TestServer.state == ServerState.BROKEN) | (TestServer.real_state == ServerState.BROKEN))
         if test_server_list:
             self.test_server_list = list(test_server_list)
+            ip_list = [i.server_ip for i in self.test_server_list]
+            logger.info(f'test_server_list is {ip_list}')
         cloud_server_list = CloudServer.filter((CloudServer.is_instance == 1) &
                                                ((CloudServer.state == ServerState.BROKEN) |
-                                                (CloudServer.real_state == ServerState.BROKEN)),
-                                               CloudServer.id > self.last_test_server_id).limit(self.BATCH_PROCESS_NUM)
+                                                (CloudServer.real_state == ServerState.BROKEN)))
         if cloud_server_list:
             self.cloud_server_list = list(cloud_server_list)
-
-    def get_last_check_server_id(self):
-        self.last_test_server_id = Rc.get_last_check_server_id(
-            ServerProvider.ALI_GROUP,
-            self.process_flag
-        )
-        self.last_cloud_server_id = Rc.get_last_check_server_id(
-            ServerProvider.ALI_CLOUD,
-            self.process_flag
-        )
-
-    def update_last_check_server_id(self):
-        if self.test_server_list:
-            last_test_server_id = self.test_server_list[-1].id
-        else:
-            last_test_server_id = 0
-        if self.cloud_server_list:
-            last_cloud_server_id = self.cloud_server_list[-1].id
-        else:
-            last_cloud_server_id = 0
-        Rc.set_last_check_server_id(
-            ServerProvider.ALI_GROUP,
-            last_test_server_id,
-            self.process_flag
-        )
-        Rc.set_last_check_server_id(
-            ServerProvider.ALI_CLOUD,
-            last_cloud_server_id,
-            self.process_flag
-        )
+            cloud_server_ip_list = [i.server_ip for i in self.cloud_server_list]
+            logger.info(f'cloud_server_list is {cloud_server_ip_list}')
 
     @staticmethod
     def _get_span_hour(start_time):
@@ -126,6 +93,8 @@ class RealStateCorrection:
         server_model = get_server_model_by_provider(provider)
         for server in server_list:
             try:
+                logger.info(
+                    f'_update_server_real_state ip is {server.server_ip}, channel_type is {server.channel_type}')
                 channel_type, server_ip = server.channel_type, server.server_ip
                 check_res, error_msg = ExecChannel.check_server_status(
                     channel_type, server_ip, max_retries=1, tsn=server.server_tsn)
@@ -172,9 +141,7 @@ class RealStateCorrection:
         ) as Lock:
             _lock = Lock.lock
             if _lock:
-                self.get_last_check_server_id()
                 self.get_new_check_servers_from_db()
-                self.update_last_check_server_id()
                 self.update_server_real_state()
 
 
