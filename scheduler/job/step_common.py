@@ -495,7 +495,7 @@ class StepCommon:
                 test_case_id=test_case_id
             ) if fr
         }
-        if CaseResult.FAIL.value in sc_results:
+        if CaseResult.FAIL.value in sc_results or not sc_results:
             conf_result = CaseResult.FAIL.name
         if CaseResult.PASS.value in sc_results and CaseResult.FAIL.value not in sc_results:
             conf_result = CaseResult.PASS.name
