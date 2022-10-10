@@ -98,7 +98,6 @@ class BaseTest(AliCloudStep, AliGroupStep):
     TEST_TYPE = None
 
     @classmethod
-    @db.atomic()
     @error_detect(**except_info)
     @check_server_before_exec_step
     def init_cloud(cls, meta_data):
@@ -106,7 +105,6 @@ class BaseTest(AliCloudStep, AliGroupStep):
         return cls._init_cloud(meta_data)
 
     @classmethod
-    @db.atomic()
     @error_detect(**except_info)
     @check_server_before_exec_step
     def initial(cls, meta_data):
@@ -146,7 +144,6 @@ class BaseTest(AliCloudStep, AliGroupStep):
         return cls._custom_script(meta_data)
 
     @classmethod
-    @db.atomic()
     @error_detect(**except_info)
     @check_server_before_exec_step
     def reboot(cls, meta_data):
@@ -218,7 +215,6 @@ class BaseTest(AliCloudStep, AliGroupStep):
         return cls._custom_script(meta_data)
 
     @classmethod
-    @db.atomic()
     @error_detect(**except_info)
     @check_server_before_exec_step
     def prepare(cls, meta_data):
