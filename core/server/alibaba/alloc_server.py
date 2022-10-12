@@ -1,8 +1,11 @@
+import datetime
+
 from core.server.base import BaseAllocServer
 from core.exception import AllocServerException
+from models.job import TestJobCase
 from scheduler.job.base_test import AliCloudStep
-from constant import RunMode, RunStrategy, ServerProvider, ServerFlowFields
-from models.server import CloudServerSnapshot
+from constant import RunMode, RunStrategy, ServerProvider, ServerFlowFields, ReleaseRule, ServerState
+from models.server import CloudServerSnapshot, ReleaseServerRecord
 from tools.log_util import LoggerFactory
 from .rand_pool import (
     AliGroupRandStdPool,
@@ -220,14 +223,26 @@ class AllocServer(BaseAllocServer):
         if not cloud_server:
             source_server_deleted = True
             cloud_server = CloudServerSnapshot.get_or_none(job_id=job_id, source_server_id=server_id)
-        if cloud_server.release_rule:
+        has_fail_case = TestJobCase.filter(job_id=job_id, state=ExecState.FAIL).exists()
+        release_server_logger.info(f'release_rule:{cloud_server.release_rule} | {type(cloud_server.release_rule)}')
+        if cloud_server.release_rule == ReleaseRule.RELEASE:
             if AliCloudStep.release_instance(cloud_server):
-                AliCloudDbServerOperation.release_server(job_id, cloud_server, source_server_deleted, cluster_server)
+                AliCloudDbServerOperation.release_server(cloud_server, source_server_deleted, cluster_server)
                 AliCloudDbServerOperation.delete_cloud_server_when_it_destroy(cloud_server)
             else:
                 release_server_logger.error(f"Release server fail, job_id:{job_id}, server_id:{server_id}")
+        elif cloud_server.release_rule == ReleaseRule.DELAY_RELEASE and has_fail_case:
+            # 如果任务失败，延时释放， 保存记录到数据库，tone做释放操作
+            ReleaseServerRecord.create(
+                server_id=server_id,
+                server_instance_id=cloud_server.instance_id,
+                estimated_release_at=datetime.datetime.now() + datetime.timedelta(days=1)
+            )
+            cloud_server.state = ServerState.UNUSABLE
+            cloud_server.description = f'跑Job({job_id})时有失败case，故延时24小时释放'
+            cloud_server.save()
         else:
-            AliCloudDbServerOperation.release_server(job_id, cloud_server, source_server_deleted, cluster_server)
+            AliCloudDbServerOperation.release_server(cloud_server, source_server_deleted, cluster_server)
 
     @classmethod
     def release_server(cls, job_id, server_object_id, run_mode, server_provider):

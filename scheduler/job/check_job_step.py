@@ -1,12 +1,13 @@
 import json
 import os
+import time
 import traceback
 import importlib
 import config
 from core.exception import CheckStepException, ExecChanelException
 from core.exec_channel import ExecChannel
 from core.op_acc_msg import OperationAccompanyMsg as Oam
-from core.server.alibaba.base_db_op import CommonDbServerOperation as Cs
+from core.server.alibaba.base_db_op import CommonDbServerOperation as Cs, CommonDbServerOperation
 from lib.cloud import Provider
 from scheduler.job.step_common import StepCommon
 from constant import (
@@ -18,7 +19,7 @@ from constant import (
     BuildPackageStatus,
     TidTypeFlag,
     ChannelType,
-    StarAgentRes, ToneAgentScriptTone
+    StarAgentRes, ToneAgentScriptTone, LogFilePath
 )
 from models.base import db
 from models.job import TestStep, TestJobCase, TestJob, BuildJob
@@ -55,7 +56,11 @@ class CheckJobStep:
                     state = test_step.state
             if is_end:
                 if stage == StepStage.RUN_CASE:
-                    cls._upload_log_file(test_step, channel_type)
+                    cls._upload_run_case_log(test_step, channel_type)
+                elif stage in StepStage.NEED_UPLOAD_LOG_STAGE_SET:
+                    log_file = cls._upload_prepare_log(test_step, stage)
+                    test_step.log_file = log_file
+                    test_step.save()
             logger.info(
                 f"check node({dag_step_id}) with check_step_with_ali_group,"
                 f" is_end: {is_end}, state: {state}, error_msg: {error_msg}"
@@ -223,7 +228,55 @@ class CheckJobStep:
                 logger.error(f"test result is empty! step_id: {test_step.id}")
 
     @classmethod
-    def _upload_log_file(cls, step, channel_type):
+    def _upload_prepare_log(cls, step, stage):
+        test_job = TestJob.get_by_id(step.job_id)
+        server = CommonDbServerOperation.get_snapshot_server_by_provider(
+            step.server, test_job.server_provider
+        )
+        if not hasattr(LogFilePath, stage.upper()):
+            logger.info(f'stage({stage}) no log file')
+            return
+        source_file = getattr(LogFilePath, stage.upper())
+        new_file_name = f'{stage}_{int(time.time())}.log'
+        cls.__upload_prepare_log(
+            source_file, new_file_name,
+            step.server_ip, step.job_id,
+            tsn=server.tsn
+        )
+        return f"{config.TONE_STORAGE_HOST}:{config.TONE_STORAGE_PROXY_PORT}/" \
+               f"{config.TONE_STORAGE_BUCKET}/{step.job_id}/{new_file_name}"
+
+    @classmethod
+    def __upload_prepare_log(cls, source_file, new_file_name, ip, job_id, tsn=None):
+        # 主要是上传 prepare 等步骤的日志文件
+        try:
+            arg = f"{config.TONE_STORAGE_BUCKET} {source_file} {new_file_name}"
+            script = StepCommon.get_agent_script(
+                ChannelType.TONE_AGENT,
+                ToneAgentScriptTone.UPLOAD_FILE,
+                job_id=job_id
+            )
+            success, result = ExecChannel.do_exec(
+                ChannelType.TONE_AGENT, ip=ip, command=script,
+                args=arg, sync=False,
+                timeout=config.UPLOAD_LOG_TIMEOUT, tsn=tsn
+            )
+            if success:
+                logger.info(f"upload file success, source_file:{source_file}, ip:{ip}, tsn:{tsn},"
+                            f"new file name:{new_file_name},result: {result}")
+            else:
+                logger.error(f"upload file failed, source_file:{source_file}, ip:{ip}, tsn:{tsn},"
+                             f"new file name:{new_file_name},result: {result}")
+        except Exception as error:
+            error = str(error)
+            err_msg = traceback.format_exc()
+            logger.error(
+                f"upload file failed! source_file:{source_file}, new file name:{new_file_name} "
+                f"reason: {error}, ip:{ip}, tsn:{tsn}, traceback: {err_msg}"
+            )
+
+    @classmethod
+    def _upload_run_case_log(cls, step, channel_type):
         # 成功的时候会由test脚本负责上传
         if step.state == ExecState.FAIL:
             job_id = step.job_id
