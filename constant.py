@@ -193,6 +193,14 @@ class StepStage:
         JOB_CLEANUP
     )
 
+    NEED_UPLOAD_LOG_STAGE_SET = (
+        INITIAL,
+        PREPARE,
+        INSTALL_KERNEL,
+        INSTALL_RPM_BEFORE_REBOOT,
+        INSTALL_RPM_AFTER_REBOOT,
+    )
+
     @classmethod
     def check_steps(cls, steps) -> bool:
         if not steps:
@@ -568,6 +576,7 @@ class ToneAgentScriptTone:
     RUN_TEST_CLOUD = "RUN_TEST"
     UPLOAD = "UPLOAD"
     UPLOAD_CLOUD = "UPLOAD"
+    UPLOAD_FILE = "FILE"
     DEPLOY_AGENT = "DEPLOY_AGENT"
     DEPLOY_AGENT_DEBIAN = "DEPLOY_AGENT_DEBIAN"
 
@@ -775,3 +784,16 @@ class MonitorParam:
 class MonitorType:
     CASE_MACHINE = 'case_machine'
     CUSTOM_MACHINE = 'custom_machine'
+
+
+class ReleaseRule:
+    DONT_RELEASE = 0
+    RELEASE = 1
+    DELAY_RELEASE = 2
+
+
+class LogFilePath:
+    PREPARE = '/tmp/prepare_tone.log'
+    INITIAL = '/tmp/initial.log'
+    INSTALL_KERNEL = '/tmp/install_kernel.log'
+    INSTALL_RPM = '/tmp/install_rpm.log'

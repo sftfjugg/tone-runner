@@ -94,7 +94,7 @@ class CloudServer(BaseModel):
     system_disk_category = peewee.CharField(help_text='系统盘类型', default='cloud_ssd')
     system_disk_size = peewee.CharField(help_text='系统盘大小', default=50)
     extra_param = peewee.TextField(help_text='扩展信息')
-    release_rule = peewee.BooleanField(default=True)
+    release_rule = peewee.IntegerField(default=1)
     # 模板
     template_name = peewee.CharField(help_text='模板名称')
     # 1、instance:用户指定，2、模板：3、由模板产生的实例，根据以下两个字段区分
@@ -280,7 +280,7 @@ class CloudServerSnapshot(BaseModel):
     extra_param = peewee.TextField(help_text='扩展信息')
     sn = peewee.CharField()
     tsn = peewee.CharField()
-    release_rule = peewee.BooleanField()
+    release_rule = peewee.IntegerField()
     # 模板
     template_name = peewee.CharField()
 
@@ -465,3 +465,14 @@ class ServerRecoverRecord(BaseModel):
 
     class Meta:
         db_table = 'server_recover_record'
+
+
+class ReleaseServerRecord(BaseModel):
+    server_id = peewee.IntegerField(unique=True, help_text='机器ID')
+    server_instance_id = peewee.CharField(help_text='机器实例ID')
+    estimated_release_at = peewee.DateTimeField(help_text='预计释放时间')
+    is_release = peewee.BooleanField(default=False, help_text='是否已释放')
+    release_at = peewee.DateTimeField(help_text='释放时间')
+
+    class Meta:
+        db_table = 'release_server_record'
