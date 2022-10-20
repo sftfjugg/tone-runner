@@ -70,7 +70,6 @@ class PlanInstComplete:
             state_desc = self.plan_inst.state_desc or DbField.EMPTY
             if self.complete_flag not in state_desc:
                 self.update_plan_inst()
-                self.notice()
             self.clear()
         except Exception as error:
             logger.exception(error)

@@ -19,6 +19,7 @@ from models.plan import (
 )
 from models.plan import PlanInstance
 from models.job import BuildJob, TestJob, TestTemplate, JobType
+from models.baseline import Baseline
 from tools.log_util import LoggerFactory
 from tools import utils
 from .plan_common import PlanCommon
@@ -171,11 +172,12 @@ class PlanExecutor:
         plan_inst = PlanInstance.get_by_id(plan_inst_id)
         kernel_info = json.loads(plan_inst.kernel_info)
         rpm_info = json.loads(plan_inst.rpm_info)
+        script_info = json.loads(plan_inst.script_info)
         env_info = json.loads(plan_inst.env_info)
         notice_info = json.loads(plan_inst.notice_info)
         baseline_info = json.loads(plan_inst.baseline_info)
         create_job_info["ws_id"] = plan_inst.ws_id
-        create_job_info["plan_inst_id"] = plan_inst_id
+        create_job_info["plan_id"] = plan_inst_id
         create_job_info["project_id"] = plan_inst.project_id
         create_job_info["username"] = plan_inst.username
         create_job_info["token"] = plan_inst.token
@@ -183,7 +185,13 @@ class PlanExecutor:
         if kernel_info:
             create_job_info["kernel_info"] = kernel_info
         if rpm_info:
-            create_job_info["rpm_info"] = rpm_info
+            rpm_info_list = list()
+            for rpm in rpm_info:
+                rpm_res = dict()
+                rpm_res["pos"] = "before"
+                rpm_res["rpm"] = rpm
+                rpm_info_list.append(rpm_res)
+            create_job_info["rpm_info"] = rpm_info_list
         if env_info:
             create_job_info["env_info"] = ",".join(
                 map(lambda env: f"{env[0]}={env[1]}", env_info.items())
@@ -192,11 +200,16 @@ class PlanExecutor:
             create_job_info["notice_info"] = notice_info
         if baseline_info:
             create_job_info["baseline_info"] = baseline_info
-        return create_job_info
+        if script_info:
+            create_job_info["script_info"] = script_info
+        return create_job_info, plan_inst.auto_report
 
     @classmethod
-    def update_create_job_info_with_test_stage_step(cls, create_job_info, test_stage_step):
+    def update_create_job_info_with_test_stage_step(cls, create_job_info, test_stage_step, auto_report):
         create_job_info.update({"template_id": test_stage_step.tmpl_id})
+        test_template = TestTemplate.get_by_id(test_stage_step.tmpl_id)
+        if test_template and not auto_report:
+            create_job_info.update({"report_name": test_template.report_name})
         baseline_info = create_job_info.get("baseline_info")
         if baseline_info:
             baseline_id = None
@@ -214,15 +227,17 @@ class PlanExecutor:
                 elif test_stage_step.test_type == TestType.PERFORMANCE:
                     baseline_id = baseline_info.get('perf_baseline_aliyun')
             if baseline_id:
-                create_job_info["baseline_id"] = baseline_id
+                baseline = Baseline.get_by_id(baseline_id)
+                if baseline:
+                    create_job_info["baseline"] = baseline.name
 
     @classmethod
     def create_plan_job(cls, plan_inst_id, instance_stage_id):
         pending = running = fail = False
-        create_job_info = cls.get_create_job_info_by_plan_inst(plan_inst_id)
+        create_job_info, auto_report = cls.get_create_job_info_by_plan_inst(plan_inst_id)
         test_steps = Pit.filter(instance_stage_id=instance_stage_id, state=ExecState.PENDING)
         for ts in test_steps:
-            cls.update_create_job_info_with_test_stage_step(create_job_info, ts)
+            cls.update_create_job_info_with_test_stage_step(create_job_info, ts, auto_report)
             success, job_id, err_msg = CreateJob(**create_job_info).create()
             if success:
                 running = True
