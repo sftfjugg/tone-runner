@@ -53,7 +53,7 @@ class ToneAgentRequest(object):
         self._sign()
         url = '{domain}/{api}'.format(domain=self._domain, api=api)
         logger.info(f"request_url: {url}, request_data: {self._data}")
-        result = requests.post(url, json=self._data, verify=False)
+        result = requests.post(url, json=self._data, verify=False, headers={'Connection': 'close'})
         try:
             return result.json()
         except Exception as e:
@@ -508,13 +508,17 @@ def _check_server_os_type(ip, sn=None):
         'uos',
         'kylin',
     ]
-    result = ToneAgentClient().do_exec(
-        ip=ip,
-        command="cat /etc/os-release | grep -i id=",
-        sync="true",
-        timeout=100,
-        sn=sn
-    )
+    try:
+        result = ToneAgentClient().do_exec(
+            ip=ip,
+            command="cat /etc/os-release | grep -i id=",
+            sync="true",
+            timeout=100,
+            sn=sn
+        )
+    except Exception as e:
+        logger.error(f"{ip} check server os type failed! error:{e}")
+        return
     logger.info(f"{ip} check server os type {result}, channel_type:tone-agent")
     if not result["SUCCESS"]:
         return
