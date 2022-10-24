@@ -182,6 +182,7 @@ class PlanExecutor:
         create_job_info["username"] = plan_inst.username
         create_job_info["token"] = plan_inst.token
         create_job_info["build_job_id"] = plan_inst.build_job_id
+        create_job_info["report_name"] = plan_inst.report_name
         if kernel_info:
             create_job_info["kernel_info"] = kernel_info
         if rpm_info:
