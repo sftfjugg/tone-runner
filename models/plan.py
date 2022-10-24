@@ -13,6 +13,7 @@ class TestPlan(BaseModel):
     kernel_version = peewee.CharField(help_text='内核版本')
     kernel_info = peewee.TextField(help_text='内核信息')
     rpm_info = peewee.TextField(help_text='RPM信息')
+    script_info = peewee.TextField(help_text='脚本信息')
     build_pkg_info = peewee.TextField(help_text='build内核信息')
     env_info = peewee.TextField(help_text='环境信息')
     notice_info = peewee.TextField(help_text='通知信息')
@@ -75,6 +76,7 @@ class PlanInstance(BaseModel):
     kernel_version = peewee.CharField(help_text='内核版本')
     kernel_info = peewee.TextField(help_text='内核信息')
     rpm_info = peewee.TextField(help_text='RPM信息')
+    script_info = peewee.TextField(help_text='脚本信息')
     build_pkg_info = peewee.TextField(help_text='build内核信息')
     build_job_id = peewee.IntegerField(help_text='build kernel id')
     env_info = peewee.TextField(help_text='环境信息')
@@ -85,6 +87,14 @@ class PlanInstance(BaseModel):
     start_time = peewee.DateTimeField(help_text='开始时间')
     end_time = peewee.DateTimeField(help_text='结束时间')
     note = peewee.CharField(help_text='备注')
+    auto_report = peewee.BooleanField(help_text='自动生成报告')
+    report_is_saved = peewee.BooleanField(help_text='是否已保存报告')
+    report_name = peewee.CharField(help_text='报告名称')
+    report_tmpl_id = peewee.IntegerField(help_text='关联模板')
+    report_description = peewee.CharField(help_text='报告描述')
+    group_method = peewee.CharField(help_text='分组方式')
+    base_group = peewee.IntegerField(help_text='基准组')
+    stage_id = peewee.IntegerField(help_text='基准阶段')
 
     class Meta:
         db_table = 'plan_instance'
