@@ -9,6 +9,8 @@ class Baseline(BaseModel):
     test_type = peewee.CharField(help_text='测试类型')
     server_provider = peewee.CharField(help_text='机器类型')
     ws_id = peewee.CharField(help_text='所属Workspace')
+    creator = peewee.IntegerField(help_text='创建者')
+    update_user = peewee.IntegerField(help_text='修改者')
 
     class Meta:
         db_table = 'baseline'
