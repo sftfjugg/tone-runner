@@ -62,7 +62,7 @@ class AliGroupDbServerOperation(CommonDbServerOperation):
     @classmethod
     def _get_rand_cluster(cls, ws_id):
         return TestCluster.select().join(
-            TestCluster, on=(TestCluster.id == TestClusterServer.cluster_id)
+            TestClusterServer, on=(TestCluster.id == TestClusterServer.cluster_id)
         ).join(
             TestServer, on=(TestServer.id == TestClusterServer.server_id)
         ).where(
