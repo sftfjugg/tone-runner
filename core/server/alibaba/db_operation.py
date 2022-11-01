@@ -33,11 +33,7 @@ class AliGroupDbServerOperation(CommonDbServerOperation):
 
     @classmethod
     def _get_rand_server(cls, ws_id):
-        tag_server_id_set = cls._get_tag_object_id_set(
-            ServerProvider.ALI_GROUP, RunMode.STANDALONE
-        )
         return TestServer.select().filter(
-            TestServer.id.not_in(tag_server_id_set),
             TestServer.state == ServerState.AVAILABLE,
             TestServer.spec_use == SpecUseType.NO_SPEC_USE,
             TestServer.ws_id == ws_id,
@@ -65,19 +61,14 @@ class AliGroupDbServerOperation(CommonDbServerOperation):
 
     @classmethod
     def _get_rand_cluster(cls, ws_id):
-        tag_cluster_id_set = cls._get_tag_object_id_set(
-            ServerProvider.ALI_GROUP,
-            RunMode.CLUSTER
-        )
         return TestCluster.select().join(
-            TestCluster, on=(TestCluster.id == TestClusterServer.cluster_id)
+            TestClusterServer, on=(TestCluster.id == TestClusterServer.cluster_id)
         ).join(
             TestServer, on=(TestServer.id == TestClusterServer.server_id)
         ).where(
             TestServer.state == ServerState.AVAILABLE,
             TestCluster.is_deleted == DbField.FALSE,
             TestServer.is_deleted == DbField.FALSE,
-            TestCluster.id.not_in(tag_cluster_id_set),
             TestCluster.cluster_type == ServerProvider.ALI_GROUP,
             TestCluster.is_occpuied == DbField.FALSE,
             TestCluster.ws_id == ws_id,
@@ -506,10 +497,17 @@ class AliCloudDbServerOperation(CommonDbServerOperation):
 
     @classmethod
     def _get_rand_cluster(cls, ws_id):
-        return TestCluster.select().filter(
+        return TestCluster.select().join(
+            TestClusterServer, on=(TestCluster.id == TestClusterServer.cluster_id)
+        ).join(
+            CloudServer, on=(CloudServer.id == TestClusterServer.server_id)
+        ).where(
+            TestCluster.ws_id == ws_id,
+            CloudServer.state == ServerState.AVAILABLE,
+            TestCluster.is_deleted == DbField.FALSE,
+            CloudServer.is_deleted == DbField.FALSE,
             TestCluster.cluster_type == ServerProvider.ALI_CLOUD,
             TestCluster.is_occpuied == DbField.FALSE,
-            TestCluster.ws_id == ws_id,
             TestCluster.occupied_job_id == DbField.NULL
         ).order_by(fn.Rand()).first()
 

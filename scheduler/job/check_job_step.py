@@ -217,7 +217,7 @@ class CheckJobStep:
     def _run_case_step_save_results(cls, test_step, dag_step, job_result, channel_type):
         if test_step.stage == StepStage.RUN_CASE:
             logger.info(f"run case complete, job_result:{job_result}")
-            cls._upload_log_file(test_step, channel_type)
+            cls._upload_run_case_log(test_step, channel_type)
             job_result = cls._clear_test_result(job_result)
             tmp_result = job_result.strip()
             if tmp_result:

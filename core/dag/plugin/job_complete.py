@@ -278,6 +278,11 @@ class JobComplete:
             summary_logger.exception(error)
 
     @staticmethod
+    def set_job_state_by_test_step(job_id, state):
+        if not TestJobCase.filter(TestJobCase.job_id == job_id, TestJobCase.state.in_(ExecState.no_end_set)).exists():
+            TestJob.update(state=state, end_time=utils.get_now()).where(id=job_id).execute()
+
+    @staticmethod
     def set_job_suite_state_in_real_time(job_suite_id):
         job_suite = TestJobSuite.get_by_id(job_suite_id)
         job_id, test_suite_id = job_suite.job_id, job_suite.test_suite_id
