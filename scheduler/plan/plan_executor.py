@@ -91,7 +91,7 @@ class PlanExecutor:
         state = ExecState.FAIL
         try:
             agent_res = get_agent_res_obj(channel_type)
-            success, result = ExecChannel.do_exec(channel_type, ip=ip, command=script)
+            success, result = ExecChannel.do_exec(channel_type, ip=ip, command=script, timeout=300)
             if success:
                 tid = result[agent_res.TID]
                 state = ExecState.RUNNING
