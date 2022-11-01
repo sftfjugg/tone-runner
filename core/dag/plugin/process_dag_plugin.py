@@ -72,6 +72,7 @@ class ProcessDagPlugin:
             JobComplete.set_job_suite_or_case_state_by_test_step(test_step, stage, ExecState.FAIL)
             dag_node = DagStepInstance.get_by_id(dag_node_id)
             JobComplete.release_server_with_dag_node(job_id, dag_node)
+            JobComplete.set_job_state_by_test_step(job_id, ExecState.FAIL)
         finally:
             if not success_exec:
                 DagStepInstance.update(
