@@ -64,7 +64,7 @@ class TestServer(BaseModel):
 
     @property
     def server_sn(self):
-        if self.channel_type == ChannelType.STAR_AGENT:
+        if self.channel_type == ChannelType.OTHER_AGENT:
             return self.sn
         else:
             return self.tsn if self.tsn else self.sn
@@ -251,7 +251,7 @@ class TestServerSnapshot(BaseModel):
 
     @property
     def server_sn(self):
-        if self.channel_type == ChannelType.STAR_AGENT:
+        if self.channel_type == ChannelType.OTHER_AGENT:
             return self.sn
         else:
             return self.tsn if self.tsn else self.sn
