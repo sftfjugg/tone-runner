@@ -29,3 +29,18 @@ class OperationLogs(BaseModel):
 
     class Meta:
         db_table = 'operation_logs'
+
+
+class KernelInfo(BaseModel):
+    version = peewee.CharField()
+    kernel_link = peewee.CharField()
+    devel_link = peewee.CharField()
+    headers_link = peewee.CharField()
+    release = peewee.BooleanField()
+    enable = peewee.BooleanField()
+    creator = peewee.IntegerField()
+    update_user = peewee.IntegerField()
+    description = peewee.CharField()
+
+    class Meta:
+        db_table = 'kernel_info'
