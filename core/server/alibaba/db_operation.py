@@ -403,12 +403,15 @@ class AliGroupDbServerOperation(CommonDbServerOperation):
             else:
                 spec_use = SpecUseType.NO_SPEC_USE
             TestServer.update(
-                state=ServerState.AVAILABLE,
-                spec_use=spec_use,
-                occupied_job_id=None
+                state=ServerState.AVAILABLE
             ).where(
                 TestServer.id == server_id,
                 TestServer.state == ServerState.OCCUPIED
+            ).execute()
+            TestServer.update(
+                occupied_job_id=None, spec_use=spec_use
+            ).where(
+                TestServer.id == server_id
             ).execute()
         else:
             logger.warning(f"server_id({server_id}) not in test_server!")
