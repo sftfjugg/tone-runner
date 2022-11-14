@@ -233,7 +233,8 @@ class AliCloudStep(AliGroupStep):
         agent_script_obj = cls.get_agent_script_obj(channel_type)
         script_flag = agent_script_obj.PREPARE_DEBIAN if \
             meta_data[ServerFlowFields.SERVER_OS_TYPE] == 'debian' else agent_script_obj.PREPARE
-        args = config.TONE_PATH + f" {meta_data[ServerFlowFields.SERVER_PROVIDER]}"
+        args = config.TONE_PATH + f" {meta_data[ServerFlowFields.SERVER_PROVIDER]} " \
+               + str(meta_data[ServerFlowFields.JOB_ID])
         logger.info(f'prepare step info:{agent_script_obj}|{args}|{meta_data}')
         success, result = cls._exec_spec_script(
             meta_data,
