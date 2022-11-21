@@ -350,7 +350,7 @@ class OtherCache:
     is_send_msg = "is_send_msg"
 
 
-class StarAgentResStatus:
+class OtherAgentResStatus:
     FINISH = "finish"
     NOT_FOUND = "not" + "found"
 
@@ -376,7 +376,7 @@ class ToneAgentResStatus:
         return status in cls.end
 
 
-class StarAgentRes:
+class OtherAgentRes:
     TID = "UID"
     SUCCESS = "SUCCESS"
     STATUS = "STATUS"
@@ -515,12 +515,12 @@ class ServerReady:
 
 
 class ChannelType:
-    STAR_AGENT = "star" + "agent"
+    OTHER_AGENT = "other" + "agent"
     TONE_AGENT = "tone" + "agent"
     CLOUD_AGENT = "cloud" + "agent"  # 过渡阶段使用，后期可能会统一为TONE_AGENT
 
 
-class StarAgentScript:
+class OtherAgentScript:
     SSH_PUB_KEY = "tone/SSH_PUB_KEY"
     INITIAL = "tone/TONE_CLEANUP"
     INSTALL_RPM = "tone/TONE_INSTALL_RPM"
@@ -533,7 +533,7 @@ class StarAgentScript:
     UPLOAD = "tone/TONE_UPLOAD"
 
 
-class StarAgentScriptTone:
+class OtherScriptTone:
     SSH_PUB_KEY = "tone/SSH_PUB_KEY"
     INITIAL = "tone/TONE_CLEANUP"
     INSTALL_RPM = "tone/TONE_INSTALL_RPM"
@@ -636,15 +636,15 @@ class PerfResultType:
 
 
 def get_agent_res_obj(channel_type):
-    if channel_type == ChannelType.STAR_AGENT:
-        return StarAgentRes
+    if channel_type == ChannelType.OTHER_AGENT:
+        return OtherAgentRes
     else:
         return ToneAgentRes
 
 
 def get_agent_res_status_obj(channel_type):
-    if channel_type == ChannelType.STAR_AGENT:
-        return StarAgentResStatus
+    if channel_type == ChannelType.OTHER_AGENT:
+        return OtherAgentResStatus
     else:
         return ToneAgentResStatus
 

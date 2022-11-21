@@ -19,7 +19,7 @@ from constant import (
     BuildPackageStatus,
     TidTypeFlag,
     ChannelType,
-    StarAgentRes, ToneAgentScriptTone, LogFilePath
+    OtherAgentRes, ToneAgentScriptTone, LogFilePath
 )
 from models.base import db
 from models.job import TestStep, TestJobCase, TestJob, BuildJob
@@ -153,10 +153,10 @@ class CheckJobStep:
         in_pool = dag_step.in_pool
         cluster_id = dag_step.cluster_id
         result = ExecChannel.do_query(channel_type, tid=tid)
-        if stage in StepStage.REBOOT_SET and channel_type == ChannelType.STAR_AGENT and \
-                (StarAgentRes.AGENT_NOT_AVAILABLE in result.get(StarAgentRes.ERROR_MSG)
-                 or StarAgentRes.AGENT_DOWN in result.get(StarAgentRes.ERROR_MSG)):
-            result[StarAgentRes.SUCCESS] = True
+        if stage in StepStage.REBOOT_SET and channel_type == ChannelType.OTHER_AGENT and \
+                (OtherAgentRes.AGENT_NOT_AVAILABLE in result.get(OtherAgentRes.ERROR_MSG)
+                 or OtherAgentRes.AGENT_DOWN in result.get(OtherAgentRes.ERROR_MSG)):
+            result[OtherAgentRes.SUCCESS] = True
         server_provider = dag_step.server_provider
         agent_res = get_agent_res_obj(channel_type)
         agent_res_status = get_agent_res_status_obj(channel_type)

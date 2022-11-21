@@ -61,7 +61,7 @@ class ExecChannel:
     def do_exec(cls, channel_type, **kwargs):
         logger.info(f"kwargs of do_exec with {channel_type} is: {kwargs}")
         try:
-            if channel_type == ChannelType.STAR_AGENT:
+            if channel_type == ChannelType.OTHER_AGENT:
                 cls.star_agent_convert_kwargs(kwargs)
                 success, result = star_agent.do_exec(**kwargs)
                 if isinstance(result, list):
@@ -86,7 +86,7 @@ class ExecChannel:
     def do_query(cls, channel_type, **kwargs):
         logger.info(f"kwargs of do_query with {channel_type} is: {kwargs}")
         try:
-            if channel_type == ChannelType.STAR_AGENT:
+            if channel_type == ChannelType.OTHER_AGENT:
                 cls.star_agent_convert_kwargs(kwargs)
                 success, result = star_agent.do_query(**kwargs)
                 if not success:
@@ -112,7 +112,7 @@ class ExecChannel:
     def do_stop(cls, channel_type, **kwargs):
         logger.info(f"kwargs of do_stop with {channel_type} is: {kwargs}")
         try:
-            if channel_type == ChannelType.STAR_AGENT:
+            if channel_type == ChannelType.OTHER_AGENT:
                 cls.star_agent_convert_kwargs_for_do_stop(kwargs)
                 success, result = star_agent.do_stop(**kwargs)
                 result = result[0] if isinstance(result, list) else result
@@ -137,7 +137,7 @@ class ExecChannel:
         error_msg = ""
         logger.info(f"{server_ip} check server status, it's channel_type is {channel_type}")
         try:
-            if channel_type == ChannelType.STAR_AGENT:
+            if channel_type == ChannelType.OTHER_AGENT:
                 check_res, error_msg = star_agent.check_server_status(server_ip, **kwargs)
             elif channel_type == ChannelType.TONE_AGENT:
                 check_res, error_msg = tone_agent.check_server_status(server_ip, **kwargs)
@@ -156,7 +156,7 @@ class ExecChannel:
     def check_reboot(cls, channel_type, server_ip, **kwargs):
         logger.info(f"{server_ip} check server reboot, it's channel_type is {channel_type}")
         try:
-            if channel_type == ChannelType.STAR_AGENT:
+            if channel_type == ChannelType.OTHER_AGENT:
                 check_res = star_agent.check_reboot(server_ip, **kwargs)
             elif channel_type == ChannelType.TONE_AGENT:
                 check_res = tone_agent.check_reboot(server_ip, **kwargs)
