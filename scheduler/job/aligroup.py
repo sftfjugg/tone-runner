@@ -21,7 +21,7 @@ from models.server import TestServer
 from tools.log_util import LoggerFactory
 from .step_common import StepCommon
 from .step_common import check_step_exists
-from constant import StarAgentRes, MonitorType
+from constant import OtherAgentRes, MonitorType
 from ..plan.plan_executor import PlanExecutor
 
 logger = LoggerFactory.scheduler()
@@ -285,7 +285,7 @@ class AliGroupStep(StepCommon):
         args = "&"
         channel_type = meta_data[ServerFlowFields.CHANNEL_TYPE]
         script_flag = cls.get_agent_script_obj(channel_type).REBOOT
-        sync = True if channel_type == ChannelType.STAR_AGENT else False
+        sync = True if channel_type == ChannelType.OTHER_AGENT else False
         success, result = cls._exec_spec_script(
             meta_data,
             script_flag=script_flag,
@@ -293,11 +293,11 @@ class AliGroupStep(StepCommon):
             timeout=RebootStep.TIMEOUT,
             sync=sync,
         )
-        if success and channel_type == ChannelType.STAR_AGENT:
-            if StarAgentRes.AGENT_NOT_AVAILABLE in result.get(StarAgentRes.ERROR_MSG) \
-                            or StarAgentRes.AGENT_DOWN in result.get(StarAgentRes.ERROR_MSG):
-                result[StarAgentRes.ERROR_MSG] = ''
-                result[StarAgentRes.SUCCESS] = True
+        if success and channel_type == ChannelType.OTHER_AGENT:
+            if OtherAgentRes.AGENT_NOT_AVAILABLE in result.get(OtherAgentRes.ERROR_MSG) \
+                            or OtherAgentRes.AGENT_DOWN in result.get(OtherAgentRes.ERROR_MSG):
+                result[OtherAgentRes.ERROR_MSG] = ''
+                result[OtherAgentRes.SUCCESS] = True
         return cls._update_step(meta_data, success, result)
 
     @classmethod

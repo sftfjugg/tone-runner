@@ -209,7 +209,8 @@ class PerformanceTest(BaseTest):
         if cv_value > cv_threshold * 100:
             track_result = TrackResult.INVALID
         else:
-            if compare_result < -cmp_threshold:
+            if compare_result < -\
+                    cmp_threshold:
                 track_result = TrackResult.DECLINE if direction == TrackResult.INCREASE else TrackResult.INCREASE
             elif compare_result > cmp_threshold:
                 track_result = TrackResult.INCREASE if direction == TrackResult.INCREASE else TrackResult.DECLINE
