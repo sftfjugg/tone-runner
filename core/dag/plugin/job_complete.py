@@ -545,11 +545,14 @@ class JobComplete:
             server_model = TestServer
         else:
             server_model = CloudServer
-        server_model.update(state=ServerState.AVAILABLE, occupied_job_id=None).where(
+        server_model.update(state=ServerState.AVAILABLE).where(
             (server_model.state == ServerState.OCCUPIED) &
             ((server_model.occupied_job_id == self.job_id) |
              (server_model.occupied_job_id.is_null(is_null=True)) |
              (server_model.occupied_job_id == ''))
+        ).execute()
+        server_model.update(occupied_job_id=None).where(
+            server_model.occupied_job_id == self.job_id
         ).execute()
         if TestJobCase.filter(job_id=self.job_id, run_mode='cluster').exists():
             TestCluster.update(is_occpuied=0, occupied_job_id=None).where(
