@@ -20,13 +20,13 @@ from models.plan import (
 from models.plan import PlanInstance
 from models.job import BuildJob, TestJob, TestTemplate, JobType
 from models.baseline import Baseline
+from models.sysconfig import KernelInfo
 from tools.log_util import LoggerFactory
 from tools import utils
 from .plan_common import PlanCommon
 from .plan_check_step import PlanCheckStep
 from .plan_server import PlanServer
 from .create_job import CreateJob
-
 
 logger = LoggerFactory.scheduler()
 plan_complete_logger = LoggerFactory.plan_complete()
@@ -37,6 +37,7 @@ class PlanExecutor:
     @staticmethod
     def _convert_build_info(build_info):
         _build_info = dict()
+        _build_info["product_id"] = build_info["name"]
         _build_info["git_repo"] = build_info["code_repo"]
         _build_info["git_branch"] = build_info["code_branch"]
         _build_info["git_commit"] = build_info["commit_id"]
@@ -91,7 +92,7 @@ class PlanExecutor:
         state = ExecState.FAIL
         try:
             agent_res = get_agent_res_obj(channel_type)
-            success, result = ExecChannel.do_exec(channel_type, ip=ip, command=script, timeout=300)
+            success, result = ExecChannel.do_exec(channel_type, ip=ip, command=script)
             if success:
                 tid = result[agent_res.TID]
                 state = ExecState.RUNNING
@@ -181,8 +182,13 @@ class PlanExecutor:
         create_job_info["project_id"] = plan_inst.project_id
         create_job_info["username"] = plan_inst.username
         create_job_info["token"] = plan_inst.token
-        create_job_info["build_job_id"] = plan_inst.build_job_id
+        if plan_inst.build_job_id:
+            create_job_info["build_job_id"] = plan_inst.build_job_id
         create_job_info["report_name"] = plan_inst.report_name
+        if plan_inst.kernel_version:
+            kernel = KernelInfo.filter(version=plan_inst.kernel_version).first()
+            if kernel:
+                create_job_info["kernel_id"] = kernel.id
         if kernel_info:
             create_job_info["kernel_info"] = kernel_info
         if rpm_info:
@@ -210,11 +216,10 @@ class PlanExecutor:
         create_job_info.update({"template_id": test_stage_step.tmpl_id})
         test_template = TestTemplate.get_by_id(test_stage_step.tmpl_id)
         if test_template and not auto_report:
-            create_job_info.update({"report_name": test_template.report_name})
+                create_job_info.update({"report_name": test_template.report_name})
         baseline_info = create_job_info.get("baseline_info")
         if baseline_info:
             baseline_id = None
-            test_template = TestTemplate.get_by_id(test_stage_step.tmpl_id)
             job_type = JobType.get_by_id(test_template.job_type_id)
             server_type = job_type.server_type
             if server_type == 'aligroup':
