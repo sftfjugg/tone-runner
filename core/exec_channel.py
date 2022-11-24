@@ -1,4 +1,3 @@
-from core.agent import star_agent
 from core.agent import tone_agent
 from core.exception import ExecChanelException, AgentRequestException
 from constant import ChannelType

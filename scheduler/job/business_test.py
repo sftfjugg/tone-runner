@@ -2,7 +2,6 @@ import json
 
 import config
 from constant import ServerFlowFields, get_agent_res_obj, ExecState, TidTypeFlag
-from core.agent.star_agent import do_exec
 from core.decorator import error_detect
 from core.exception import ExecStepException
 from models.base import db

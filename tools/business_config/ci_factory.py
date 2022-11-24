@@ -4,7 +4,6 @@ import re
 import abc
 import jenkins
 
-from core.agent.star_agent import do_query, do_exec
 from tools.log_util import LoggerFactory
 
 logger = LoggerFactory.summary_error_log()
