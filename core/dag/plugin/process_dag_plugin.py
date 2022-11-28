@@ -7,7 +7,7 @@ from core.dag.plugin import db_operation
 from core.dag.plugin.job_complete import JobComplete
 from core.cache.remote_source import RemoteFlowSource
 from core.server.alibaba.db_operation import AliCloudDbServerOperation as Alc
-from models.server import TestServerSnapshot
+from models.server import TestServerSnapshot, CloudServerSnapshot
 from scheduler.job import get_test_class
 from constant import StepStage, ExecState, ServerFlowFields, ServerProvider
 from models.dag import DagStepInstance
@@ -33,8 +33,12 @@ class ProcessDagPlugin:
         meta_data[ServerFlowFields.DAG_ID] = db_node_inst.dag_id
         meta_data[ServerFlowFields.DAG_STEP_ID] = dag_node_id
         if not meta_data[ServerFlowFields.SERVER_SN]:
-            server_snapshot = TestServerSnapshot.get_by_id(meta_data[ServerFlowFields.SERVER_SNAPSHOT_ID])
-            meta_data[ServerFlowFields.SERVER_SN] = server_snapshot.sn
+            server_snapshot_obj = TestServerSnapshot if meta_data[ServerFlowFields.SERVER_PROVIDER] == 'aligroup' \
+                else CloudServerSnapshot
+            server_snapshot = server_snapshot_obj.filter(
+                server_snapshot_obj.id == meta_data[ServerFlowFields.SERVER_SNAPSHOT_ID]).first()
+            if server_snapshot:
+                meta_data[ServerFlowFields.SERVER_SN] = server_snapshot.sn
         stage = meta_data[ServerFlowFields.STEP]
         test_class = get_test_class(meta_data[ServerFlowFields.TEST_TYPE])
         db_node_inst.state = ExecState.RUNNING
