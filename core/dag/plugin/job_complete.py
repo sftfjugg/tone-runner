@@ -580,7 +580,7 @@ class JobComplete:
         if not self.job.show_kernel_version and len(kernel_version_count) == 1:
             kernel_version = kernel_version_count.first().kernel_version
             self.job.show_kernel_version = kernel_version
-        if not self.job.product_version and len(product_version_count) == 1:
+        if not self.job.product_version and len(product_version_count) > 0:
             product_version = product_version_count.first().product_version
             self.job.product_version = product_version
         self.job.save()
