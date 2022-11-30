@@ -257,6 +257,10 @@ class TestServerSnapshot(BaseModel):
             return self.tsn if self.tsn else self.sn
 
     @property
+    def server_tsn(self):
+        return self.tsn
+
+    @property
     def server_provider(self):
         return ServerProvider.ALI_GROUP
 
