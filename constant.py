@@ -797,3 +797,4 @@ class LogFilePath:
     INITIAL = '/tmp/initial.log'
     INSTALL_KERNEL = '/tmp/install_kernel.log'
     INSTALL_RPM = '/tmp/install_rpm.log'
+    INIT_CLOUD = '/tmp/deploy_agent.log'
