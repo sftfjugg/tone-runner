@@ -46,7 +46,7 @@ class CreateJob:
                 res = res.json()
                 if res["code"] == 200:
                     success = True
-                    job_id = res["data"]["id"]
+                    job_id = res["data"]["job_id"]
                 else:
                     err_msg = res["msg"]
             else:
