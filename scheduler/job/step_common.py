@@ -14,8 +14,8 @@ from constant import (
     TestType,
     JobCfgFields,
     RunMode,
-    StarAgentScript,
-    StarAgentScriptTone,
+    OtherAgentScript,
+    OtherScriptTone,
     ToneAgentScript,
     ToneAgentScriptTone,
     ChannelType,
@@ -168,11 +168,11 @@ class StepCommon:
         test_frame = BaseConfig.get(
             config_key=BaseConfigKey.TEST_FRAMEWORK
         ).config_value
-        if channel_type == ChannelType.STAR_AGENT:
+        if channel_type == ChannelType.OTHER_AGENT:
             if test_frame == TestFrameWork.AKTF:
-                return StarAgentScript
+                return OtherAgentScript
             else:
-                return StarAgentScriptTone
+                return OtherScriptTone
         else:
             return cls.get_tone_agent_script_obj(test_frame)
 
@@ -190,7 +190,7 @@ class StepCommon:
     @classmethod
     def get_agent_script(cls, channel_type, script_flag, stage=None, job_id=None, run_mode=None,
                          env_info=None, hot_fix=None, cluster_id=None, provider=None):
-        if channel_type == ChannelType.STAR_AGENT:
+        if channel_type == ChannelType.OTHER_AGENT:
             return cls._get_star_agent_script(
                 job_id, run_mode, script_flag, stage,
                 env_info, hot_fix, cluster_id, provider
