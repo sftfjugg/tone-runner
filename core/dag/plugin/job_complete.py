@@ -221,7 +221,8 @@ class JobComplete:
             f"job_case_id is: {job_case_id}"
         )
         TestJobCase.update(state=ExecState.FAIL, end_time=utils.get_now()).where(
-            TestJobCase.id == job_case_id
+            TestJobCase.id == job_case_id,
+            TestJobCase.state.not_in(ExecState.end)
         ).execute()
 
     @staticmethod
