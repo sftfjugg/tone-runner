@@ -134,6 +134,7 @@ class PoolCommonOperation:
                     ServerFlowFields.SERVER_ID: server_id,
                     ServerFlowFields.SERVER_SNAPSHOT_ID: snapshot_server_id,
                     ServerFlowFields.SERVER_IP: server_ip,
+                    ServerFlowFields.PRIVATE_IP: test_server.private_ip,
                     ServerFlowFields.SERVER_SN: get_sn_by_ip(server_ip),
                     ServerFlowFields.CHANNEL_TYPE: test_server.channel_type or ChannelType.OTHER_AGENT,
                     ServerFlowFields.IN_POOL: test_server.in_pool
