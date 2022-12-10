@@ -5,7 +5,7 @@ from core.exec_channel import ExecChannel
 from core.decorator import error_detect
 from core.server.alibaba.base_db_op import CommonDbServerOperation as Cs
 from core.op_acc_msg import OperationAccompanyMsg as Oam
-from constant import ServerFlowFields, ServerProvider, ExecState
+from constant import ServerFlowFields, ServerProvider, ExecState, StepStage
 from models.base import db
 from models.job import TestStep
 from models.server import get_server_model_by_provider, TestServer
@@ -74,16 +74,19 @@ def check_server_before_exec_step(func):
             result = (f"check server status fail before exec step<{step}>,"
                       f" job_id: {job_id}, dag_step_id: {dag_step_id}, "
                       f"server_id: {server_id}, server_ip: {server_ip}")
+            job_case_id = 0
+            if stage in StepStage.TEST:
+                job_case_id = meta_data.get(ServerFlowFields.JOB_CASE_ID, 0)
             TestStep.create(
                 job_id=job_id,
                 state=ExecState.FAIL,
                 stage=stage,
                 job_suite_id=job_suite_id,
-                job_case_id=meta_data.get(ServerFlowFields.JOB_CASE_ID, 0),
+                job_case_id=job_case_id,
                 server=snapshot_server_id,
                 dag_step_id=dag_step_id,
                 result=result,
-                cluster_id=cluster_id or snapshot_cluster_id
+                cluster_id=snapshot_cluster_id
             )
             test_step = TestStep.get_or_none(dag_step_id=dag_step_id)
             from core.dag.plugin.job_complete import JobComplete
