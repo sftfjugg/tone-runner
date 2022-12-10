@@ -144,6 +144,11 @@ class StepStage:
         RUN_CASE
     )
 
+    ONE_CASE_PRE_SET = (
+        SCRIPT_BEFORE_CASE,
+        SCRIPT_AFTER_CASE
+    )
+
     REBOOT_SET = (
         REBOOT,
         REBOOT_FOR_INSTALL_KERNEL,
