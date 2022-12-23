@@ -23,6 +23,7 @@ from models.baseline import Baseline
 from models.sysconfig import KernelInfo
 from tools.log_util import LoggerFactory
 from tools import utils
+from tools.utils import kernel_info_format
 from .plan_common import PlanCommon
 from .plan_check_step import PlanCheckStep
 from .plan_server import PlanServer
@@ -76,6 +77,7 @@ class PlanExecutor:
         kernel_info[JobCfgFields.HEADERS] = headers
         kernel_info[JobCfgFields.DEV] = dev
         kernel_info[JobCfgFields.KERNEL] = kernel
+        kernel_info[JobCfgFields.KERNEL_PACKAGES] = rpm_list
         PlanInstance.update(
             kernel_info=json.dumps(kernel_info)
         ).where(
@@ -190,7 +192,7 @@ class PlanExecutor:
             if kernel:
                 create_job_info["kernel_id"] = kernel.id
         if kernel_info:
-            create_job_info["kernel_info"] = kernel_info
+            create_job_info["kernel_info"] = kernel_info_format(kernel_info)
         if rpm_info:
             rpm_info_list = list()
             for rpm in rpm_info:
