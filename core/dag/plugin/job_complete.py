@@ -244,6 +244,36 @@ class JobComplete:
         ).execute()
 
     @staticmethod
+    def set_job_case_state_by_server_snapshot_id(job_id, server_snapshot_id, set_state):
+        # 根据case分配的机器server_snapshot_id查询并设置case状态
+        job_cases = TestJobCase.filter(job_id=job_id, server_snapshot_id=server_snapshot_id)
+        job_case_ids = {case.id for case in job_cases}
+        TestJobCase.update(state=set_state, end_time=utils.get_now()).where(
+            TestJobCase.id.in_(job_case_ids),
+            TestJobCase.state.not_in(ExecState.end)
+        ).execute()
+        # 根据case状态设置suite状态
+        test_suite_ids = {case.test_suite_id for case in job_cases}
+        for test_suite_id in test_suite_ids:
+            JobComplete.set_suite_state_by_case_state(job_id, set_state, test_suite_id)
+
+    @staticmethod
+    def set_suite_state_by_case_state(job_id, set_state, test_suite_id):
+        # 根据case状态设置suite状态
+        job_cases = TestJobCase.select(TestJobCase.state).filter(
+            job_id=job_id, test_suite_id=test_suite_id
+        )
+        job_case_states = {job_case.state for job_case in job_cases}
+        has_no_end_job_case = ExecState.no_end_set & job_case_states
+        if not has_no_end_job_case:
+            # 如果所有suite下所有case都是完成状态，则更新suite状态
+            TestJobSuite.update(state=set_state, end_time=utils.get_now()).where(
+                TestJobSuite.job_id == job_id,
+                TestJobSuite.test_suite_id == test_suite_id,
+                TestJobSuite.state.not_in(ExecState.end)
+            ).execute()
+
+    @staticmethod
     def set_job_suite_state_by_test_step(test_step, stage, state):
         if stage in StepStage.SUITE_SET:
             job_suite_id = test_step.job_suite_id
