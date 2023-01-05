@@ -223,7 +223,8 @@ class AllocServer(BaseAllocServer):
         if not cloud_server:
             source_server_deleted = True
             cloud_server = CloudServerSnapshot.get_or_none(job_id=job_id, source_server_id=server_id)
-        has_fail_case = TestJobCase.filter(job_id=job_id, state=ExecState.FAIL).exists()
+        has_fail_case = TestJobCase.filter(job_id=job_id, state=ExecState.FAIL,
+                                           server_object_id=cloud_server.parent_server_id).exists()
         if cloud_server:
             if cloud_server.release_rule == ReleaseRule.RELEASE or \
                     (cloud_server.release_rule == ReleaseRule.DELAY_RELEASE and not has_fail_case):
