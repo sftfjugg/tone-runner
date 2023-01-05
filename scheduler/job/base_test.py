@@ -55,9 +55,9 @@ def check_server_before_exec_step(func):
                     Oam.set_server_broken_and_send_msg(job_id, server, error_msg=error_msg,
                                                        run_mode=run_mode, cluster_id=cluster_id)
                 else:
-                    TestServer.update(state='Occupied', spec_use=2, occupied_job_id=job_id).where(
-                        TestServer.id == server_id,
-                        TestServer.state == 'Available'
+                    server_model.update(state='Occupied', spec_use=2, occupied_job_id=job_id).where(
+                        server_model.id == server_id,
+                        server_model.state == 'Available'
                     ).execute()
                     logger.info(f"reset server state, job_id:{job_id}, server_id:{server_id}")
         else:
