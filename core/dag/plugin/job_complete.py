@@ -21,8 +21,9 @@ from core.client.goldmine_monitor import GoldmineMonitor
 from core.dag.plugin import db_operation
 from core.exec_channel import ExecChannel
 from core.op_acc_msg import OperationAccompanyMsg as Oam
-from core.server.alibaba.base_db_op import CommonDbServerOperation as Cs
-from models.server import TestServerSnapshot, CloudServerSnapshot, TestServer, CloudServer, TestCluster
+from core.server.alibaba.base_db_op import CommonDbServerOperation as Cs, CommonDbServerOperation
+from models.server import TestServerSnapshot, CloudServerSnapshot, TestServer, CloudServer, TestCluster, \
+    TestClusterSnapshot, TestClusterServerSnapshot, TestClusterServer
 from models.job import MonitorInfo
 from scheduler.job.base_test import BaseTest
 from constant import (
@@ -175,18 +176,35 @@ class JobComplete:
             for se in spec_server_job_cases:
                 server_snapshot_id = se.server_snapshot_id
                 server_object_id = se.server_object_id
-                if server_snapshot_id:
-                    server_snapshot = TestServerSnapshot.filter(id=server_snapshot_id).first()
-                    if server_snapshot:
-                        server_sn = server_snapshot.server_sn
-                elif server_object_id:
-                    server = TestServer.filter(id=server_snapshot_id).first()
-                    if server:
-                        server_sn = server.server_sn
-                if server_sn:
-                    is_using, using_id = RemoteAllocServerSource.check_server_in_using_by_cache(server_sn)
-                    if is_using and str(using_id) == str(self.job_id):
-                        RemoteAllocServerSource.remove_server_from_using_cache(server_sn)
+                if se.run_mode == RunMode.STANDALONE:
+                    if server_snapshot_id:
+                        server_snapshot = TestServerSnapshot.filter(id=server_snapshot_id).first()
+                        if server_snapshot:
+                            server_sn = server_snapshot.server_sn
+                    elif server_object_id:
+                        server = TestServer.filter(id=server_snapshot_id).first()
+                        if server:
+                            server_sn = server.server_sn
+                    if server_sn:
+                        is_using, using_id = RemoteAllocServerSource.check_server_in_using_by_cache(server_sn)
+                        if is_using and str(using_id) == str(self.job_id):
+                            RemoteAllocServerSource.remove_server_from_using_cache(server_sn)
+                else:
+                    test_cluster = TestClusterSnapshot.get_by_id(server_snapshot_id)
+                    # 循环每一个集群下的机器，获取 server_sn、释放机器
+                    cluster_servers_snapshot = TestClusterServerSnapshot.filter(cluster_id=test_cluster.id)
+                    for test_cluster_server_snapshot in cluster_servers_snapshot:
+                        test_cluster_server = TestClusterServer.get_by_id(
+                            test_cluster_server_snapshot.source_cluster_server_id)
+                        server = CommonDbServerOperation().get_server_by_provider(
+                            test_cluster_server.server_id,
+                            test_cluster_server.cluster_type
+                        )
+                        server_sn = server.sn
+                        if server_sn:
+                            is_using, using_id = RemoteAllocServerSource.check_server_in_using_by_cache(server_sn)
+                            if is_using and str(using_id) == str(self.job_id):
+                                RemoteAllocServerSource.remove_server_from_using_cache(server_sn)
 
     @staticmethod
     def get_run_strategy(test_job_case):
@@ -221,7 +239,8 @@ class JobComplete:
             f"job_case_id is: {job_case_id}"
         )
         TestJobCase.update(state=ExecState.FAIL, end_time=utils.get_now()).where(
-            TestJobCase.id == job_case_id
+            TestJobCase.id == job_case_id,
+            TestJobCase.state.not_in(ExecState.end)
         ).execute()
 
     @staticmethod
