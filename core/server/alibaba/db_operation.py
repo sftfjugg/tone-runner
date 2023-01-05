@@ -614,15 +614,15 @@ class AliCloudDbServerOperation(CommonDbServerOperation):
         cluster_server = cls.get_cluster_server(cluster_id, ServerProvider.ALI_CLOUD)
         if cluster_server:
             if is_instance:
+                if cls._check_cluster_server_broken(job_id, cluster_server, cluster_id):
+                    return None, {
+                        ServerFlowFields.SERVER_STATE: ServerState.BROKEN
+                    }
                 is_using, using_id = cls.check_cluster_server_using_by_cache(cluster_server, ServerProvider.ALI_CLOUD)
                 if is_using:
                     return None, {
                         ServerFlowFields.SERVER_STATE: ServerState.OCCUPIED,
                         ServerFlowFields.USING_ID: using_id
-                    }
-                if cls._check_cluster_server_broken(job_id, cluster_server, cluster_id):
-                    return None, {
-                        ServerFlowFields.SERVER_STATE: ServerState.BROKEN
                     }
                 if cls._update_cluster_server(job_id, cluster_id, cluster_server):
                     return cluster_server, None
