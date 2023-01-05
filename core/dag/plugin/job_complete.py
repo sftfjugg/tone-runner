@@ -21,8 +21,9 @@ from core.client.goldmine_monitor import GoldmineMonitor
 from core.dag.plugin import db_operation
 from core.exec_channel import ExecChannel
 from core.op_acc_msg import OperationAccompanyMsg as Oam
-from core.server.alibaba.base_db_op import CommonDbServerOperation as Cs
-from models.server import TestServerSnapshot, CloudServerSnapshot, TestServer, CloudServer, TestCluster
+from core.server.alibaba.base_db_op import CommonDbServerOperation as Cs, CommonDbServerOperation
+from models.server import TestServerSnapshot, CloudServerSnapshot, TestServer, CloudServer, TestCluster, \
+    TestClusterSnapshot, TestClusterServerSnapshot, TestClusterServer
 from models.job import MonitorInfo
 from scheduler.job.base_test import BaseTest
 from constant import (
@@ -175,18 +176,35 @@ class JobComplete:
             for se in spec_server_job_cases:
                 server_snapshot_id = se.server_snapshot_id
                 server_object_id = se.server_object_id
-                if server_snapshot_id:
-                    server_snapshot = TestServerSnapshot.filter(id=server_snapshot_id).first()
-                    if server_snapshot:
-                        server_sn = server_snapshot.server_sn
-                elif server_object_id:
-                    server = TestServer.filter(id=server_snapshot_id).first()
-                    if server:
-                        server_sn = server.server_sn
-                if server_sn:
-                    is_using, using_id = RemoteAllocServerSource.check_server_in_using_by_cache(server_sn)
-                    if is_using and str(using_id) == str(self.job_id):
-                        RemoteAllocServerSource.remove_server_from_using_cache(server_sn)
+                if se.run_mode == RunMode.STANDALONE:
+                    if server_snapshot_id:
+                        server_snapshot = TestServerSnapshot.filter(id=server_snapshot_id).first()
+                        if server_snapshot:
+                            server_sn = server_snapshot.server_sn
+                    elif server_object_id:
+                        server = TestServer.filter(id=server_snapshot_id).first()
+                        if server:
+                            server_sn = server.server_sn
+                    if server_sn:
+                        is_using, using_id = RemoteAllocServerSource.check_server_in_using_by_cache(server_sn)
+                        if is_using and str(using_id) == str(self.job_id):
+                            RemoteAllocServerSource.remove_server_from_using_cache(server_sn)
+                else:
+                    test_cluster = TestClusterSnapshot.get_by_id(server_snapshot_id)
+                    # 循环每一个集群下的机器，获取 server_sn、释放机器
+                    cluster_servers_snapshot = TestClusterServerSnapshot.filter(cluster_id=test_cluster.id)
+                    for test_cluster_server_snapshot in cluster_servers_snapshot:
+                        test_cluster_server = TestClusterServer.get_by_id(
+                            test_cluster_server_snapshot.source_cluster_server_id)
+                        server = CommonDbServerOperation().get_server_by_provider(
+                            test_cluster_server.server_id,
+                            test_cluster_server.cluster_type
+                        )
+                        server_sn = server.sn
+                        if server_sn:
+                            is_using, using_id = RemoteAllocServerSource.check_server_in_using_by_cache(server_sn)
+                            if is_using and str(using_id) == str(self.job_id):
+                                RemoteAllocServerSource.remove_server_from_using_cache(server_sn)
 
     @staticmethod
     def get_run_strategy(test_job_case):
@@ -224,6 +242,36 @@ class JobComplete:
             TestJobCase.id == job_case_id,
             TestJobCase.state.not_in(ExecState.end)
         ).execute()
+
+    @staticmethod
+    def set_job_case_state_by_server_snapshot_id(job_id, server_snapshot_id, set_state):
+        # 根据case分配的机器server_snapshot_id查询并设置case状态
+        job_cases = TestJobCase.filter(job_id=job_id, server_snapshot_id=server_snapshot_id)
+        job_case_ids = {case.id for case in job_cases}
+        TestJobCase.update(state=set_state, end_time=utils.get_now()).where(
+            TestJobCase.id.in_(job_case_ids),
+            TestJobCase.state.not_in(ExecState.end)
+        ).execute()
+        # 根据case状态设置suite状态
+        test_suite_ids = {case.test_suite_id for case in job_cases}
+        for test_suite_id in test_suite_ids:
+            JobComplete.set_suite_state_by_case_state(job_id, set_state, test_suite_id)
+
+    @staticmethod
+    def set_suite_state_by_case_state(job_id, set_state, test_suite_id):
+        # 根据case状态设置suite状态
+        job_cases = TestJobCase.select(TestJobCase.state).filter(
+            job_id=job_id, test_suite_id=test_suite_id
+        )
+        job_case_states = {job_case.state for job_case in job_cases}
+        has_no_end_job_case = ExecState.no_end_set & job_case_states
+        if not has_no_end_job_case:
+            # 如果所有suite下所有case都是完成状态，则更新suite状态
+            TestJobSuite.update(state=set_state, end_time=utils.get_now()).where(
+                TestJobSuite.job_id == job_id,
+                TestJobSuite.test_suite_id == test_suite_id,
+                TestJobSuite.state.not_in(ExecState.end)
+            ).execute()
 
     @staticmethod
     def set_job_suite_state_by_test_step(test_step, stage, state):

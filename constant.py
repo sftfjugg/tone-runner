@@ -144,6 +144,11 @@ class StepStage:
         RUN_CASE
     )
 
+    ONE_CASE_PRE_SET = (
+        SCRIPT_BEFORE_CASE,
+        SCRIPT_AFTER_CASE
+    )
+
     REBOOT_SET = (
         REBOOT,
         REBOOT_FOR_INSTALL_KERNEL,
@@ -502,6 +507,7 @@ class JobCfgFields:
     KERNEL = "kernel"
     DEV = "dev" + "el"
     HEADERS = "headers"
+    KERNEL_PACKAGES = "kernel_packages"
     HOT_FIX = "hot" + "fix" + 'install'
     CONSOLE = "console"
     MONITOR_INFO = "monitor_info"

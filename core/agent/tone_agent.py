@@ -439,17 +439,21 @@ def deploy_agent_by_ecs_assistant(
             version = cp.get('toneagent_version_linux_arm', 'linux-aarch64-1.0.2')
 
     logger.info(f"add agent api params:{instance_id}|{ip}|{public_ip}|{cloud_driver}|{mode}|{arch}|{os_type}")
-    add_agent_result = ToneAgentClient("add").add_agent(
-        ip,
-        public_ip,
-        mode=mode,
-        arch=arch,
-        version=version,
-        description='created by tone-runner system'
-    )
-    logger.info(f"add agent api result:{add_agent_result}")
-    if not add_agent_result.get("SUCCESS"):
-        return False, add_agent_result.get('RESULT') or add_agent_result.get('msg')
+    retry_count = 3
+    for i in range(retry_count):
+        add_agent_result = ToneAgentClient("add").add_agent(
+            ip,
+            public_ip,
+            mode=mode,
+            arch=arch,
+            version=version,
+            description='created by tone-runner system'
+        )
+        logger.info(f"add agent api result:{add_agent_result}")
+        if add_agent_result.get("SUCCESS"):
+            break
+    else:
+        return False, add_agent_result.get('RESULT') or add_agent_result.get('ERROR_MSG')
     tsn = add_agent_result['RESULT']['TSN']
     rpm_link = add_agent_result['RESULT']['RPM_LINK']
 

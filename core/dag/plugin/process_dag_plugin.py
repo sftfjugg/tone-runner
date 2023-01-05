@@ -9,7 +9,7 @@ from core.cache.remote_source import RemoteFlowSource
 from core.server.alibaba.db_operation import AliCloudDbServerOperation as Alc
 from models.server import TestServerSnapshot, CloudServerSnapshot
 from scheduler.job import get_test_class
-from constant import StepStage, ExecState, ServerFlowFields, ServerProvider
+from constant import StepStage, ExecState, ServerFlowFields, ServerProvider, RunMode
 from models.dag import DagStepInstance
 from models.job import TestJob, TestStep
 from tools.log_util import LoggerFactory
@@ -72,8 +72,16 @@ class ProcessDagPlugin:
                 dag_step_id=dag_node_id,
                 result=error
             )
-            test_step = TestStep.get_or_none(dag_step_id=dag_node_id)
-            JobComplete.set_job_suite_or_case_state_by_test_step(test_step, stage, ExecState.FAIL)
+            if stage in StepStage.TEST:
+                test_step = TestStep.get_or_none(dag_step_id=dag_node_id)
+                JobComplete.set_job_suite_or_case_state_by_test_step(test_step, stage, ExecState.FAIL)
+            else:
+                # 机器准备阶段异常后根据case分配的机器server_snapshot_id查询并设置case、suite状态
+                run_mode = meta_data[ServerFlowFields.RUN_MODE]
+                server_snapshot_id = snapshot_server_id
+                if run_mode == RunMode.CLUSTER:
+                    server_snapshot_id = snapshot_cluster_id
+                JobComplete.set_job_case_state_by_server_snapshot_id(job_id, server_snapshot_id, ExecState.FAIL)
             dag_node = DagStepInstance.get_by_id(dag_node_id)
             JobComplete.release_server_with_dag_node(job_id, dag_node)
             JobComplete.set_job_state_by_test_step(job_id, ExecState.FAIL)

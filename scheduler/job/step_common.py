@@ -97,6 +97,12 @@ class StepCommon:
         sn = meta_data.get(ServerFlowFields.SERVER_SN)
         script = meta_data[JobCfgFields.SCRIPT]
         env_info = meta_data.get(JobCfgFields.ENV_INFO, dict())
+        stage = meta_data[ServerFlowFields.STEP]
+        if stage in StepStage.ONE_CASE_PRE_SET:
+            job_case_id = meta_data[ServerFlowFields.JOB_CASE_ID]
+            test_job_case = TestJobCase.get_by_id(job_case_id)
+            job_case_env_info = test_job_case.env_info
+            env_info.update(json.loads(job_case_env_info))
         script = cls._get_ag_script(script, job_id, env_info)
         if channel_type == ChannelType.TONE_AGENT:
             cls._get_tone_agent_env(job_id, env_info)
@@ -404,10 +410,14 @@ class StepCommon:
 
     @classmethod
     def _get_install_kernel_args(cls, kernel_info):
-        kernel = kernel_info[JobCfgFields.KERNEL]
-        dev = kernel_info[JobCfgFields.DEV]
-        headers = kernel_info[JobCfgFields.HEADERS]
-        args = " ".join([kernel, dev, headers])
+        kernal_packages = kernel_info.get(JobCfgFields.KERNEL_PACKAGES)
+        if kernal_packages:
+            args = " ".join(kernal_packages)
+        else:
+            kernel = kernel_info[JobCfgFields.KERNEL]
+            dev = kernel_info[JobCfgFields.DEV]
+            headers = kernel_info[JobCfgFields.HEADERS]
+            args = " ".join([kernel, dev, headers])
         return args
 
     @classmethod

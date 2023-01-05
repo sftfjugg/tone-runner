@@ -225,6 +225,7 @@ class CheckJobStep:
                 test_class.save_result(test_step, job_result)
                 test_class.compare_baseline(dag_step)
             else:
+                test_step.state = ExecState.FAIL
                 logger.error(f"test result is empty! step_id: {test_step.id}")
 
     @classmethod
