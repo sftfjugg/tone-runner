@@ -507,6 +507,7 @@ class JobCfgFields:
     KERNEL = "kernel"
     DEV = "dev" + "el"
     HEADERS = "headers"
+    KERNEL_PACKAGES = "kernel_packages"
     HOT_FIX = "hot" + "fix" + 'install'
     CONSOLE = "console"
     MONITOR_INFO = "monitor_info"

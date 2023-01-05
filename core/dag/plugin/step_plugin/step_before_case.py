@@ -155,9 +155,9 @@ class JobStepBeforeCase(BaseStepPlugin):
         kernel_version = None
         if self.build_pkg_info or self.kernel_info:
             if self.kernel_info:
-                kernel = self.kernel_info.get("kernel")
+                kernel = self.kernel_info.get("kernel_packages", [])[:1]
                 if kernel:
-                    kernel_version = utils.get_kernel_version(kernel)
+                    kernel_version = utils.get_kernel_version(kernel[0])
             self.expect_steps.append(
                 {
                     ServerFlowFields.STEP: StepStage.CHECK_KERNEL_INSTALL,

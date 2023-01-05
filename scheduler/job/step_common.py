@@ -410,10 +410,14 @@ class StepCommon:
 
     @classmethod
     def _get_install_kernel_args(cls, kernel_info):
-        kernel = kernel_info[JobCfgFields.KERNEL]
-        dev = kernel_info[JobCfgFields.DEV]
-        headers = kernel_info[JobCfgFields.HEADERS]
-        args = " ".join([kernel, dev, headers])
+        kernal_packages = kernel_info.get(JobCfgFields.KERNEL_PACKAGES)
+        if kernal_packages:
+            args = " ".join(kernal_packages)
+        else:
+            kernel = kernel_info[JobCfgFields.KERNEL]
+            dev = kernel_info[JobCfgFields.DEV]
+            headers = kernel_info[JobCfgFields.HEADERS]
+            args = " ".join([kernel, dev, headers])
         return args
 
     @classmethod
