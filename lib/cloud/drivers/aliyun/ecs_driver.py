@@ -380,7 +380,8 @@ class EcsDriver(LibCloudECSDriver, RpcRequest):
             system_disk = self._get_system_disk(ex_system_disk)
             if system_disk:
                 params.update(system_disk)
-
+        if ex_system_disk.get('size'):
+            params.update({'SystemDisk.Size': ex_system_disk.get('size')})
         if ex_data_disks:
             data_disks = self._get_data_disks(ex_data_disks)
             if data_disks:
