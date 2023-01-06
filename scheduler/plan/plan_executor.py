@@ -209,7 +209,6 @@ class PlanExecutor:
     @classmethod
     def update_create_job_info_with_test_stage_step(cls, create_job_info, test_stage_step):
         create_job_info.update({"template_id": test_stage_step.tmpl_id})
-        test_template = TestTemplate.get_by_id(test_stage_step.tmpl_id)
         baseline_info = create_job_info.get("baseline_info")
         if baseline_info:
             baseline_id = None
