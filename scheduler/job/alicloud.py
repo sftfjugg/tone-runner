@@ -173,17 +173,20 @@ class AliCloudStep(AliGroupStep):
                 )
             else:
                 cloud_server = CloudServer.get(instance_id=instance_id)
-            if not instance_id:
-                cls._deploy_cloud_agent(cloud_server, cloud_driver)
-            TestStep.create(
+            test_step = TestStep.create(
                 job_id=job_id,
-                state=ExecState.SUCCESS,
+                state=ExecState.RUNNING,
                 stage=StepStage.INIT_CLOUD,
                 job_suite_id=job_suite_id,
                 cluster_id=snapshot_cluster_id,
                 server=snapshot_server_id,
                 dag_step_id=dag_step_id,
             )
+            if not instance_id:
+                cls._deploy_cloud_agent(cloud_server, cloud_driver)
+            test_step.state = ExecState.SUCCESS
+            test_step.result = 'init cloud done'
+            test_step.save()
         except ExecStepException as error:
             cls.release_instance(cloud_server)
             raise ExecStepException(error)
