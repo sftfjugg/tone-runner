@@ -280,6 +280,7 @@ class EcsDriver(LibCloudECSDriver, RpcRequest):
         resp = self.connection.request(self.path, params=params)
         nodes = self.get_list_nodes(resp)
         node = nodes[0]
+        time.sleep(10)
         self.start_node(node)
         return node
 
