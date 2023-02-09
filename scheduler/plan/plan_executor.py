@@ -209,22 +209,13 @@ class PlanExecutor:
     @classmethod
     def update_create_job_info_with_test_stage_step(cls, create_job_info, test_stage_step):
         create_job_info.update({"template_id": test_stage_step.tmpl_id})
-        test_template = TestTemplate.get_by_id(test_stage_step.tmpl_id)
         baseline_info = create_job_info.get("baseline_info")
         if baseline_info:
             baseline_id = None
-            job_type = JobType.get_by_id(test_template.job_type_id)
-            server_type = job_type.server_type
-            if server_type == 'aligroup':
-                if test_stage_step.test_type == TestType.FUNCTIONAL:
-                    baseline_id = baseline_info.get(BaselineType.FUNCTIONAL)
-                elif test_stage_step.test_type == TestType.PERFORMANCE:
-                    baseline_id = baseline_info.get(BaselineType.PERFORMANCE)
-            else:
-                if test_stage_step.test_type == TestType.FUNCTIONAL:
-                    baseline_id = baseline_info.get('func_baseline_aliyun')
-                elif test_stage_step.test_type == TestType.PERFORMANCE:
-                    baseline_id = baseline_info.get('perf_baseline_aliyun')
+            if test_stage_step.test_type == TestType.FUNCTIONAL:
+                baseline_id = baseline_info.get(BaselineType.FUNCTIONAL)
+            elif test_stage_step.test_type == TestType.PERFORMANCE:
+                baseline_id = baseline_info.get(BaselineType.PERFORMANCE)
             if baseline_id:
                 baseline = Baseline.get_by_id(baseline_id)
                 if baseline:
