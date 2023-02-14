@@ -41,7 +41,7 @@ async def produce_exec_job():
         TestJob.filter(
             state=ExecState.PENDING
         ).order_by(
-            TestJob.gmt_created.desc()
+            TestJob.gmt_created.asc()
         ).limit(config.PROCESS_JOB_NUM)
     ]
     for real_process_job_id in process_job_ids:

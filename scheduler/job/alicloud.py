@@ -10,6 +10,7 @@ from constant import (
     ServerState
 )
 from core.agent.tone_agent import ToneAgentClient
+from core.dag.plugin.db_operation import _check_job_end
 from core.exception import ExecStepException
 from core.agent import tone_agent
 from core.server.alibaba.base_db_op import CommonDbServerOperation as Cs
@@ -90,13 +91,17 @@ class AliCloudStep(AliGroupStep):
             new_cloud_server_data.pop("id")
             new_cloud_server_data.update({
                 "job_id": job_id,
-                "occupied_job_id": job_id,
                 "parent_server_id": server_id or snapshot_server_id,
                 "instance_id": instance_id,
                 "is_instance": True,
-                "state": ServerState.OCCUPIED,
                 "template_name": f"{provider_info_dict.get('template_name', '')}_{time.time()}",
             })
+            if not _check_job_end(job_id):
+                # job在init_cloud步骤完成前没有被终止，机器创建完成才设置为被job占用
+                new_cloud_server_data.update({
+                    "occupied_job_id": job_id,
+                    "state": ServerState.OCCUPIED,
+                })
             cloud_server = CloudServer(**new_cloud_server_data)
             if provider_info.provider == Provider.ALIYUN_ECS:
                 cls._ecs_cloud_info(driver, cloud_server, instance_name) 
@@ -168,17 +173,20 @@ class AliCloudStep(AliGroupStep):
                 )
             else:
                 cloud_server = CloudServer.get(instance_id=instance_id)
-            if not instance_id:
-                cls._deploy_cloud_agent(cloud_server, cloud_driver)
-            TestStep.create(
+            test_step = TestStep.create(
                 job_id=job_id,
-                state=ExecState.SUCCESS,
+                state=ExecState.RUNNING,
                 stage=StepStage.INIT_CLOUD,
                 job_suite_id=job_suite_id,
                 cluster_id=snapshot_cluster_id,
                 server=snapshot_server_id,
                 dag_step_id=dag_step_id,
             )
+            if not instance_id:
+                cls._deploy_cloud_agent(cloud_server, cloud_driver)
+            test_step.state = ExecState.SUCCESS
+            test_step.result = 'init cloud done'
+            test_step.save()
         except ExecStepException as error:
             cls.release_instance(cloud_server)
             raise ExecStepException(error)
