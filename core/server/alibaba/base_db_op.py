@@ -216,6 +216,21 @@ class CommonDbServerOperation:
         }
 
     @classmethod
+    def get_ali_cloud_cluster_server_id_set(cls, job_id, snapshot_cluster_id):
+        snapshot_server_id_set = {snapshot_server.server_id for snapshot_server in
+                                  TestClusterServerSnapshot.select(TestClusterServerSnapshot.server_id).filter(
+                                      job_id=job_id, cluster_id=snapshot_cluster_id)
+                                  }
+        instance_server_ip_list = []
+        for snapshot_server_id in snapshot_server_id_set:
+            instance_server_ip_list.append(CloudServerSnapshot.get_by_id(snapshot_server_id).pub_ip)
+        instance_server_id_set = {cloud_server.id for cloud_server in
+                                  CloudServer.select(CloudServer.id).filter(CloudServer.job_id == job_id,
+                                                                            CloudServer.pub_ip.in_(
+                                                                                instance_server_ip_list))}
+        return instance_server_id_set
+
+    @classmethod
     def set_server_broken(cls, server, job_id, error_msg):
         server.history_state = server.state
         server.state = ServerState.BROKEN

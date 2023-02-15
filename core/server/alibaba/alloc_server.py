@@ -5,7 +5,7 @@ from core.exception import AllocServerException
 from models.job import TestJobCase
 from scheduler.job.base_test import AliCloudStep
 from constant import RunMode, RunStrategy, ServerProvider, ServerFlowFields, ReleaseRule, ServerState, ExecState
-from models.server import CloudServerSnapshot, ReleaseServerRecord, CloudServer
+from models.server import CloudServerSnapshot, ReleaseServerRecord, CloudServer, TestCluster
 from tools.log_util import LoggerFactory
 from .rand_pool import (
     AliGroupRandStdPool,
@@ -217,56 +217,83 @@ class AllocServer(BaseAllocServer):
         AliGroupDbServerOperation.release_server(job_id, server_id, cluster_server)
 
     @classmethod
-    def _release_ali_cloud_server(cls, job_id, server_id, cluster_server=False):
+    def _release_ali_cloud_server(cls, job_id, server_id, snapshot_cluster_id=None, old_is_instance=None):
+        # 云上配置集群场景，server_id为机器配置生成的机器实例id, snapshot_cluster_id为配置集群生成的实例集群快照id
+        cluster_server = True if snapshot_cluster_id else False
         source_server_deleted = False
-        cloud_server = AliCloudDbServerOperation.get_cloud_server(job_id, server_id)
+        cloud_server = CloudServer.get_by_id(server_id)
         if not cloud_server:
             source_server_deleted = True
             cloud_server = CloudServerSnapshot.get_or_none(job_id=job_id, source_server_id=server_id)
-        if not cluster_server:
-            has_fail_case = TestJobCase.filter(job_id=job_id, state=ExecState.FAIL,
-                                               server_object_id=cloud_server.parent_server_id).exists()
+        if old_is_instance:
+            # 机器实例不涉及释放、或失败保留
+            AliCloudDbServerOperation.release_server(cloud_server, source_server_deleted, cluster_server)
         else:
-            has_fail_case = TestJobCase.filter(job_id=job_id, run_mode=RunMode.CLUSTER,
-                                               server_object_id=cloud_server.cluster_id)
-        if cloud_server:
-            if cloud_server.release_rule == ReleaseRule.RELEASE or \
-                    (cloud_server.release_rule == ReleaseRule.DELAY_RELEASE and not has_fail_case):
-                if AliCloudStep.release_instance(cloud_server):
-                    AliCloudDbServerOperation.release_server(cloud_server, source_server_deleted, cluster_server)
-                    AliCloudDbServerOperation.delete_cloud_server_when_it_destroy(cloud_server)
+            has_fail_case = cls.check_job_case_has_fail(job_id, server_id, snapshot_cluster_id)
+            if cloud_server:
+                if cloud_server.release_rule == ReleaseRule.RELEASE or \
+                        (cloud_server.release_rule == ReleaseRule.DELAY_RELEASE and not has_fail_case):
+                    if AliCloudStep.release_instance(cloud_server):
+                        AliCloudDbServerOperation.release_server(cloud_server, source_server_deleted, cluster_server)
+                        AliCloudDbServerOperation.delete_cloud_server_when_it_destroy(cloud_server)
+                    else:
+                        release_server_logger.error(f"Release server fail, job_id:{job_id}, server_id:{server_id}")
+                elif cloud_server.release_rule == ReleaseRule.DELAY_RELEASE and has_fail_case:
+                    # 如果任务失败，延时释放， 保存记录到数据库，tone做释放操作
+                    try:
+                        if not source_server_deleted:
+                            cls.set_release_server_info_and_record(cloud_server, job_id)
+                    except Exception as e:
+                        release_server_logger.error(f"Release server fail, job_id:{job_id}, server_id:{server_id}"
+                                                    f"error: {e}")
                 else:
-                    release_server_logger.error(f"Release server fail, job_id:{job_id}, server_id:{server_id}")
-            elif cloud_server.release_rule == ReleaseRule.DELAY_RELEASE and has_fail_case:
-                # 如果任务失败，延时释放， 保存记录到数据库，tone做释放操作
-                try:
-                    if not cloud_server.is_instance:
-                        cloud_server = CloudServer.get(job_id=job_id, parent_server_id=server_id)
-                    ReleaseServerRecord.create(
-                        server_id=cloud_server.id,
-                        server_instance_id=cloud_server.instance_id,
-                        estimated_release_at=datetime.datetime.now() + datetime.timedelta(days=1)
-                    )
-                    cloud_server.state = ServerState.UNUSABLE
-                    cloud_server.description = f'跑Job({job_id})时有失败case，故延时24小时释放'
-                    cloud_server.save()
-                except Exception as e:
-                    release_server_logger.error(f"Release server fail, job_id:{job_id}, server_id:{server_id}"
-                                                f"error: {e}")
+                    AliCloudDbServerOperation.release_server(cloud_server, source_server_deleted, cluster_server)
             else:
                 AliCloudDbServerOperation.release_server(cloud_server, source_server_deleted, cluster_server)
-        else:
-            AliCloudDbServerOperation.release_server(cloud_server, source_server_deleted, cluster_server)
 
     @classmethod
-    def release_server(cls, job_id, server_object_id, run_mode, server_provider):
+    def set_release_server_info_and_record(cls, cloud_server, job_id):
+        ReleaseServerRecord.create(
+            server_id=cloud_server.id,
+            server_instance_id=cloud_server.instance_id,
+            estimated_release_at=datetime.datetime.now() + datetime.timedelta(days=1)
+        )
+        cloud_server.state = ServerState.UNUSABLE
+        cloud_server.description = f'跑Job({job_id})时有失败case，故延时24小时释放'
+        cloud_server.save()
+
+    @classmethod
+    def check_job_case_has_fail(cls, job_id, server_id, snapshot_cluster_id):
+        has_fail_case = False
+        if not snapshot_cluster_id:
+            cloud_server_snapshot_id_set = {cloud_server_snapshot.id for cloud_server_snapshot in
+                                            CloudServerSnapshot.select(CloudServerSnapshot.id).filter(
+                                                job_id=job_id, source_server_id=server_id)}
+            if cloud_server_snapshot_id_set:
+                has_fail_case = TestJobCase.filter(TestJobCase.job_id == job_id,
+                                                   TestJobCase.state == ExecState.FAIL,
+                                                   TestJobCase.run_mode == RunMode.STANDALONE,
+                                                   TestJobCase.server_snapshot_id.in_(
+                                                       cloud_server_snapshot_id_set)).exists()
+
+        else:
+            has_fail_case = TestJobCase.filter(TestJobCase.job_id == job_id,
+                                               TestJobCase.state == ExecState.FAIL,
+                                               TestJobCase.run_mode == RunMode.CLUSTER,
+                                               TestJobCase.server_snapshot_id == snapshot_cluster_id).exists()
+        return has_fail_case
+
+    @classmethod
+    def release_server(cls, job_id, server_object_id, run_mode, server_provider, snapshot_cluster_id=None,
+                       old_is_instance=None):
         if run_mode == RunMode.CLUSTER:
-            cls._release_cluster_server(job_id, server_object_id, server_provider)
+            cls._release_cluster_server(job_id, server_object_id, server_provider,
+                                        snapshot_cluster_id=snapshot_cluster_id, old_is_instance=old_is_instance)
         else:
-            cls._release_std_server(job_id, server_object_id, server_provider)
+            cls._release_std_server(job_id, server_object_id, server_provider, old_is_instance)
 
     @classmethod
-    def _release_std_server(cls, job_id, server_id, server_provider):
+    def _release_std_server(cls, job_id, server_id, server_provider, old_is_instance):
         try:
             release_server_logger.info(
                 f"Release standalone server, server_id:{server_id}, "
@@ -277,7 +304,7 @@ class AllocServer(BaseAllocServer):
         if server_provider == ServerProvider.ALI_GROUP:
             cls._release_ali_group_server(job_id, server_id)
         else:
-            cls._release_ali_cloud_server(job_id, server_id)
+            cls._release_ali_cloud_server(job_id, server_id, old_is_instance=old_is_instance)
 
     @classmethod
     def _release_ali_group_cluster(cls, job_id, cluster_id):
@@ -288,15 +315,22 @@ class AllocServer(BaseAllocServer):
         AliGroupDbServerOperation.release_cluster(cluster_id)
 
     @classmethod
-    def _release_ali_cloud_cluster(cls, job_id, cluster_id):
-        cluster_server_id_set = AliCloudDbServerOperation.get_cluster_server_id_set(
-            cluster_id, ServerProvider.ALI_CLOUD)
+    def _release_ali_cloud_cluster(cls, job_id, cluster_id, snapshot_cluster_id, old_is_instance):
+        is_instance = TestCluster.get_by_id(cluster_id).is_instance
+        if is_instance == 1:
+            cluster_server_id_set = AliCloudDbServerOperation.get_cluster_server_id_set(
+                cluster_id, ServerProvider.ALI_CLOUD)
+        else:
+            cluster_server_id_set = AliCloudDbServerOperation.get_ali_cloud_cluster_server_id_set(job_id,
+                                                                                                  snapshot_cluster_id)
         for server_id in cluster_server_id_set:
-            cls._release_ali_cloud_server(job_id, server_id, cluster_server=True)
+            cls._release_ali_cloud_server(job_id, server_id, snapshot_cluster_id=snapshot_cluster_id,
+                                          old_is_instance=old_is_instance)
         AliCloudDbServerOperation.release_cluster(cluster_id)
 
     @classmethod
-    def _release_cluster_server(cls, job_id, cluster_id, server_provider):
+    def _release_cluster_server(cls, job_id, cluster_id, server_provider, snapshot_cluster_id=None,
+                                old_is_instance=None):
         release_server_logger.info(
             f"Release cluster, cluster_id:{cluster_id}, "
             f"server_provider:{server_provider}, job_id:{job_id}"
@@ -304,7 +338,7 @@ class AllocServer(BaseAllocServer):
         if server_provider == ServerProvider.ALI_GROUP:
             cls._release_ali_group_cluster(job_id, cluster_id)
         else:
-            cls._release_ali_cloud_cluster(job_id, cluster_id)
+            cls._release_ali_cloud_cluster(job_id, cluster_id, snapshot_cluster_id, old_is_instance)
 
     def _get_standalone_server_info(self):
         self.server_info[ServerFlowFields.RUN_MODE] = RunMode.STANDALONE
