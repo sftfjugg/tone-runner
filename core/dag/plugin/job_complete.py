@@ -485,7 +485,11 @@ class JobComplete:
             logger.warning(warning_msg)
         else:
             # 释放机器前执行清理脚本(如果有的话)
+            snapshot_cluster_id = None
+            old_is_instance = None
             if meta_data:
+                snapshot_cluster_id = meta_data.get(ServerFlowFields.SNAPSHOT_CLUSTER_ID)
+                old_is_instance = meta_data.get(ServerFlowFields.IS_INSTANCE)
                 JobComplete.clean_script(
                     job_id, server_object_id, run_mode, server_provider, meta_data, in_pool
                 )
@@ -495,12 +499,14 @@ class JobComplete:
                 release_msg += f", dag_node_id:{dag_node_id}"
             logger.info(release_msg)
             if not in_pool:
+                if not server_sn:
+                    return
                 is_using, using_id = RemoteAllocServerSource.check_server_in_using_by_cache(server_sn)
                 if is_using and str(using_id) == str(job_id):
                     RemoteAllocServerSource.remove_server_from_using_cache(server_sn)
                     return
             alloc_server_module.AllocServer.release_server(
-                job_id, server_object_id, run_mode, server_provider
+                job_id, server_object_id, run_mode, server_provider, snapshot_cluster_id, old_is_instance
             )
             RemoteReleaseServerSource.add_job_release_server(
                 job_id, f"{server_provider}_{run_mode}_{job_suite_id}_{server_object_id}_{run_strategy}"
