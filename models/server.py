@@ -157,6 +157,7 @@ class TestCluster(BaseModel):
     ws_id = peewee.CharField()
     owner = peewee.IntegerField(null=True, help_text='Owner')
     description = peewee.CharField(help_text='描述')
+    is_instance = peewee.BooleanField(default=True, help_text='是否实例')
 
     class Meta:
         table_name = "test_cluster"

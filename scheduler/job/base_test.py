@@ -286,7 +286,6 @@ class BaseTest(AliCloudStep, AliGroupStep):
         return cls._custom_script(meta_data)
 
     @classmethod
-    @db.atomic()
     @error_detect(**except_info)
     @check_server_before_exec_step
     def run_case(cls, meta_data):

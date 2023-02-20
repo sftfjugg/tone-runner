@@ -412,12 +412,16 @@ class StepCommon:
     def _get_install_kernel_args(cls, kernel_info):
         kernal_packages = kernel_info.get(JobCfgFields.KERNEL_PACKAGES)
         if kernal_packages:
-            args = " ".join(kernal_packages)
+            new_args = ""
+            # 包名中超长或者代码特殊字符（如:&）会导致环境上执行install脚本包名参数被截断报错，因此增加''
+            for pkg in kernal_packages:
+                new_args += f"'{pkg}' "
+            args = new_args.strip()
         else:
             kernel = kernel_info[JobCfgFields.KERNEL]
             dev = kernel_info[JobCfgFields.DEV]
             headers = kernel_info[JobCfgFields.HEADERS]
-            args = " ".join([kernel, dev, headers])
+            args = f"'{kernel}' '{dev}' '{headers}'"
         return args
 
     @classmethod
