@@ -251,7 +251,8 @@ class CheckJobStep:
     def __upload_prepare_log(cls, source_file, new_file_name, ip, job_id, tsn=None):
         # 主要是上传 prepare 等步骤的日志文件
         try:
-            arg = f"{config.TONE_STORAGE_BUCKET} {source_file} {new_file_name}"
+            file_name = source_file.split('/')[-1]
+            arg = f"{source_file} {file_name} {new_file_name}"
             script = StepCommon.get_agent_script(
                 ChannelType.TONE_AGENT,
                 ToneAgentScriptTone.UPLOAD_FILE,
