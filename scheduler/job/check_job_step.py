@@ -244,7 +244,7 @@ class CheckJobStep:
             step.server_ip, step.job_id,
             tsn=server.tsn
         )
-        return f"{config.TONE_STORAGE_HOST}:{config.TONE_STORAGE_PROXY_PORT}/" \
+        return f"http://{config.TONE_STORAGE_HOST}:{config.TONE_STORAGE_PROXY_PORT}/" \
                f"{config.TONE_STORAGE_BUCKET}/{step.job_id}/{new_file_name}"
 
     @classmethod
