@@ -542,7 +542,17 @@ class JobComplete:
                 meta_data[ServerFlowFields.SERVER_IP] = server_ip
                 meta_data[ServerFlowFields.SERVER_SN] = server.sn
                 meta_data[ServerFlowFields.CHANNEL_TYPE] = server.channel_type
-                BaseTest.exec_custom_script(meta_data, sync=True, timeout=config.SYNC_SCRIPT_TIMEOUT)
+                try:
+                    success, result = BaseTest.exec_custom_script(meta_data, sync=True,
+                                                                  timeout=config.SYNC_SCRIPT_TIMEOUT)
+                    logger.info(
+                        f"exec cleanup script job_id:{job_id}, server:{server}, clean_script:{clean_script}, "
+                        f"state:{success}, result:{result}"
+                    )
+                except Exception as error:
+                    logger.error(
+                        f"job_id:{job_id}, server_ip:{server_ip}, clean_script:{clean_script}, "
+                        f"exec job clean_script has error: {error},\n")
 
     def stop_steps_by_job_stop(self):
         if self.end_state == ExecState.STOP:
