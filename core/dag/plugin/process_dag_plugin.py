@@ -82,8 +82,8 @@ class ProcessDagPlugin:
                 if run_mode == RunMode.CLUSTER:
                     server_snapshot_id = snapshot_cluster_id
                 JobComplete.set_job_case_state_by_server_snapshot_id(job_id, server_snapshot_id, ExecState.FAIL)
-            dag_node = DagStepInstance.get_by_id(dag_node_id)
-            JobComplete.release_server_with_dag_node(job_id, dag_node)
+                dag_node = DagStepInstance.get_by_id(dag_node_id)
+                JobComplete.release_server_with_dag_node(job_id, dag_node)
             JobComplete.set_job_state_by_test_step(job_id, ExecState.FAIL)
         finally:
             if not success_exec:
