@@ -195,4 +195,3 @@ def kernel_info_format(kernel_info):
         if name not in ['kernel', 'devel', 'headers']:
             new_kernel_info[name] = value
     return new_kernel_info
-

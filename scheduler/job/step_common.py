@@ -467,6 +467,7 @@ class StepCommon:
         )
         test_job = TestJob.get_by_id(job_id)
         kernel = test_job.kernel_version or ""
+        sn = sn if sn else ''
         if ResultFile.filter(
             test_job_id=job_id,
             test_suite_id=test_suite_id,
@@ -493,7 +494,7 @@ class StepCommon:
                 test_job_id=job_id,
                 test_suite_id=test_suite_id,
                 test_case_id=test_case_id,
-                sn=sn if sn else "",
+                sn=sn,
                 kernel=kernel,
                 arch="",
                 archive_link="",

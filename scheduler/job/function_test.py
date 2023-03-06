@@ -9,12 +9,10 @@ from models.baseline import FuncBaselineDetail
 from tools.log_util import LoggerFactory
 from .base_test import BaseTest
 
-
 logger = LoggerFactory.job_result()
 
 
 class FunctionTest(BaseTest):
-
     TEST_TYPE = TestType.FUNCTIONAL
 
     @classmethod
@@ -36,22 +34,8 @@ class FunctionTest(BaseTest):
             if parsed:
                 continue
             try:
-                statistic_match = re.match(r"^statistic\.json$", line.strip())
-                if statistic_match:
-                    file_url = base_url + 'statistic.json'
-                    response = requests.get(file_url)
-                    logger.info(f"send result file request, file_url:{file_url}, response: {response.text}")
-                    if response.ok:
-                        statistic_data = json.loads(response.text)
-                        cls.save_statistic_data(
-                            job_id, dag_step_id, test_suite_id,
-                            test_case_id, statistic_data
-                        )
-                        parsed = True
-                        if statistic_data["status"] == 'fail':
-                            cls._set_step_state_fail(step)
-                    else:
-                        cls._set_step_state_fail(step)
+                parsed = cls._save_test_result(base_url, dag_step_id, job_id, line, parsed, step, test_case_id,
+                                               test_suite_id)
             except Exception as error:
                 cls._set_step_state_fail(step)
                 logger.error('save_result error, detail:{}'.format(str(error)),)
@@ -59,6 +43,26 @@ class FunctionTest(BaseTest):
                     f"save test data has exception, job_id:{job_id}, step_id:{step_id}:"
                 )
                 raise CheckStepException(error)
+
+    @classmethod
+    def _save_test_result(cls, base_url, dag_step_id, job_id, line, parsed, step, test_case_id, test_suite_id):
+        statistic_match = re.match(r"^statistic\.json$", line.strip())
+        if statistic_match:
+            file_url = base_url + 'statistic.json'
+            response = requests.get(file_url)
+            logger.info(f"send result file request, file_url:{file_url}, response: {response.text}")
+            if response.ok:
+                statistic_data = json.loads(response.text)
+                cls.save_statistic_data(
+                    job_id, dag_step_id, test_suite_id,
+                    test_case_id, statistic_data
+                )
+                parsed = True
+                if statistic_data["status"] == 'fail':
+                    cls._set_step_state_fail(step)
+            else:
+                cls._set_step_state_fail(step)
+        return parsed
 
     @classmethod
     def _set_step_state_fail(cls, step):
