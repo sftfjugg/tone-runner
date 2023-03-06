@@ -229,8 +229,9 @@ class AllocServer(BaseAllocServer):
             # 机器实例不涉及释放、或失败保留
             AliCloudDbServerOperation.release_server(cloud_server, source_server_deleted, cluster_server)
         else:
-            has_fail_case = cls.check_job_case_has_fail(job_id, server_id, snapshot_cluster_id)
-            if cloud_server:
+            if cloud_server and cloud_server.is_instance:
+                has_fail_case = cls.check_job_case_has_fail(job_id, server_id, snapshot_cluster_id)
+                release_server_logger.info(f'_release_ali_cloud_server:{job_id}|{server_id}|{has_fail_case}')
                 if cloud_server.release_rule == ReleaseRule.RELEASE or \
                         (cloud_server.release_rule == ReleaseRule.DELAY_RELEASE and not has_fail_case):
                     if AliCloudStep.release_instance(cloud_server):
@@ -248,8 +249,6 @@ class AllocServer(BaseAllocServer):
                                                     f"error: {e}")
                 else:
                     AliCloudDbServerOperation.release_server(cloud_server, source_server_deleted, cluster_server)
-            else:
-                AliCloudDbServerOperation.release_server(cloud_server, source_server_deleted, cluster_server)
 
     @classmethod
     def set_release_server_info_and_record(cls, cloud_server, job_id):
