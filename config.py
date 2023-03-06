@@ -39,7 +39,7 @@ CELERY_BACKEND_ADDRESS = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:6379/{CELERY_B
 TONE_AGENT_DOMAIN = cp.get("toneagent_domain")
 TONE_AGENT_ACCESS_KEY = cp.get("toneagent_access_key")
 TONE_AGENT_SECRET_KEY = cp.get("toneagent_secret_key")
-AGENT_MAX_TIMEOUT = 60 * 60 * 60 * 2
+AGENT_MAX_TIMEOUT = 60 * 60 * 24 * 10
 
 # agent common
 AGENT_REQUEST_MAX_RETRIES = int(cp.get("agent_request_max_retries", 5))
