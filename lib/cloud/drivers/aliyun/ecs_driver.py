@@ -416,9 +416,10 @@ class EcsDriver(LibCloudECSDriver, RpcRequest):
         # set extra param
         if extra_param and isinstance(extra_param, list):
             for param_item in extra_param:
-                param_key = param_item.get('param_key').strip()
-                param_value = param_item.get('param_value').strip()
-                params[param_key] = param_value
+                param_key = param_item.get('param_key')
+                param_value = param_item.get('param_value')
+                if param_key and param_value:
+                    params[param_key.strip()] = param_value.strip()
 
     def _start_node(self, node):
         """
