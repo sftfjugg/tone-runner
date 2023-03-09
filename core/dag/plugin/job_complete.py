@@ -329,7 +329,7 @@ class JobComplete:
     @staticmethod
     def set_job_state_by_test_step(job_id, state):
         if not TestJobCase.filter(TestJobCase.job_id == job_id, TestJobCase.state.in_(ExecState.no_end_set)).exists():
-            TestJob.update(state=state, end_time=utils.get_now()).where(id=job_id).execute()
+            TestJob.update(state=state, end_time=utils.get_now()).where(TestJob.id == job_id).execute()
 
     @staticmethod
     def set_job_suite_state_in_real_time(job_suite_id):
